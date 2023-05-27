@@ -7,6 +7,21 @@ from UtilLib.JSONHandler import JSONHandler
 
 bus_svc_data: JSONHandler
 
+dbl_loop_data = {
+    "42": "Lengkong Empat & Fidelio St",
+    "92": "Science Pk Dr & Mount Sinai Dr",
+    "291": "Tampines St 81 & Tampines St 33",
+    "293": "Tampines St 71 & Tampines Ave 7",
+    "307": "Choa Chu Kang St 62 & Teck Whye Lane",
+    "358": "Pasir Ris Dr 10 & Pasir Ris Dr 4",
+    "359": "Pasir Ris St 71 & Pasir Ris Dr 2",
+    "811": "Yishun Ave 5 & Yishun Ave 1",
+    "812": "Yishun Ave 4 & Yishun Ave 3",
+    "911": "Woodlands Ave 2 & Woodlands Ctr Rd",
+    "912": "Woodlands Ave 7 & Woodlands Ctr Rd",
+    "913": "Woodlands Circle & Woodlands Ave 3"
+}
+
 
 def request_bus_svc_info(svc: str, direction: int, api_key: str):
     """
@@ -113,6 +128,10 @@ def return_bus_svc_json(svc: str, direction: int):
 
             if data["Direction"] == 1 and data["LoopDesc"] != "":
                 is_loop = True
+
+            for (k, v) in dbl_loop_data.items():
+                if k == data["ServiceNo"]:
+                    data["LoopDesc"] = v
 
             return (
                 data["ServiceNo"],
