@@ -49,6 +49,10 @@ def query_timing(message):
 
 
 def explicit_buses(message):
+    if message.text == "/cancel":
+        bot.send_message(message.chat.id, "Action cancelled.")
+        return
+
     bus_stop_code = message.text
     sent_msg = bot.send_message(message.chat.id, "Enter the explicit bus services to see only. Otherwise leave 0"
                                                  " to see all services. (i.e.: 5, 12e, 46)")
@@ -58,6 +62,10 @@ def explicit_buses(message):
 def parse_data(message, bus_stop_info: str, bus_svc_list_str: str = ""):
     global bus_mem
     global svc_mem
+
+    if message.text == "/cancel":
+        bot.send_message(message.chat.id, "Action cancelled.")
+        return
 
     if bus_stop_info.isdigit():
         bus_stop_code = bus_stop_info
