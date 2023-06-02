@@ -495,21 +495,21 @@
             "ServiceNo": "384"
         },
         {
-            "AM_Offpeak_Freq": "15-10",
-            "AM_Peak_Freq": "07-11",
+            "AM_Offpeak_Freq": "10-15",
+            "AM_Peak_Freq": "07-08",
             "Category": "FEEDER",
             "DestinationCode": "65009",
             "Direction": 1,
             "LoopDesc": "Punggol Ctrl",
             "Operator": "GAS",
             "OriginCode": "65009",
-            "PM_Offpeak_Freq": "15-07",
-            "PM_Peak_Freq": "07-11",
+            "PM_Offpeak_Freq": "07-15",
+            "PM_Peak_Freq": "07-10",
             "ServiceNo": "386"
         },
         {
-            "AM_Offpeak_Freq": "0-0",
-            "AM_Peak_Freq": "0-0",
+            "AM_Offpeak_Freq": "-",
+            "AM_Peak_Freq": "-",
             "Category": "FEEDER",
             "DestinationCode": "65371",
             "Direction": 1,
@@ -1185,14 +1185,14 @@
         },
         {
             "AM_Offpeak_Freq": "11-16",
-            "AM_Peak_Freq": "11-14",
+            "AM_Peak_Freq": "12-14",
             "Category": "TRUNK",
             "DestinationCode": "64009",
             "Direction": 1,
             "LoopDesc": "Upp Paya Lebar Rd",
             "Operator": "SBST",
             "OriginCode": "64009",
-            "PM_Offpeak_Freq": "11-14",
+            "PM_Offpeak_Freq": "11-15",
             "PM_Peak_Freq": "15-16",
             "ServiceNo": "113"
         },
@@ -2752,13 +2752,13 @@
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "74009",
-            "PM_Offpeak_Freq": "17-24",
+            "PM_Offpeak_Freq": "17-25",
             "PM_Peak_Freq": "14-17",
             "ServiceNo": "18"
         },
         {
-            "AM_Offpeak_Freq": "14-16",
-            "AM_Peak_Freq": "14-14",
+            "AM_Offpeak_Freq": "13-16",
+            "AM_Peak_Freq": "13-14",
             "Category": "TRUNK",
             "DestinationCode": "74009",
             "Direction": 2,
@@ -2766,7 +2766,7 @@
             "Operator": "SBST",
             "OriginCode": "84299",
             "PM_Offpeak_Freq": "15-23",
-            "PM_Peak_Freq": "13-15",
+            "PM_Peak_Freq": "14-16",
             "ServiceNo": "18"
         },
         {
@@ -3381,12 +3381,12 @@
             "ServiceNo": "232"
         },
         {
-            "AM_Offpeak_Freq": "05-09",
-            "AM_Peak_Freq": "05-06",
+            "AM_Offpeak_Freq": "04-10",
+            "AM_Peak_Freq": "04-07",
             "Category": "FEEDER",
             "DestinationCode": "52009",
             "Direction": 1,
-            "LoopDesc": "Toa Payoh Rise",
+            "LoopDesc": "Toa Payoh Lk",
             "Operator": "SBST",
             "OriginCode": "52009",
             "PM_Offpeak_Freq": "06-12",
@@ -4187,7 +4187,7 @@
             "ServiceNo": "329"
         },
         {
-            "AM_Offpeak_Freq": "10-15",
+            "AM_Offpeak_Freq": "09-15",
             "AM_Peak_Freq": "10-15",
             "Category": "TRUNK",
             "DestinationCode": "16009",
@@ -4196,12 +4196,12 @@
             "Operator": "SBST",
             "OriginCode": "84009",
             "PM_Offpeak_Freq": "14-17",
-            "PM_Peak_Freq": "13-15",
+            "PM_Peak_Freq": "14-15",
             "ServiceNo": "33"
         },
         {
             "AM_Offpeak_Freq": "09-18",
-            "AM_Peak_Freq": "14-15",
+            "AM_Peak_Freq": "14-14",
             "Category": "TRUNK",
             "DestinationCode": "84009",
             "Direction": 2,
@@ -4209,7 +4209,7 @@
             "Operator": "SBST",
             "OriginCode": "16009",
             "PM_Offpeak_Freq": "11-17",
-            "PM_Peak_Freq": "09-11",
+            "PM_Peak_Freq": "10-11",
             "ServiceNo": "33"
         },
         {
@@ -4247,8 +4247,8 @@
             "LoopDesc": "Alps Ave",
             "Operator": "SBST",
             "OriginCode": "84009",
-            "PM_Offpeak_Freq": "14-15",
-            "PM_Peak_Freq": "10-14",
+            "PM_Offpeak_Freq": "15-15",
+            "PM_Peak_Freq": "09-14",
             "ServiceNo": "35"
         },
         {
@@ -5071,7 +5071,7 @@
             "ServiceNo": "60T"
         },
         {
-            "AM_Offpeak_Freq": "08-15",
+            "AM_Offpeak_Freq": "08-16",
             "AM_Peak_Freq": "07-09",
             "Category": "TRUNK",
             "DestinationCode": "82009",
@@ -5079,8 +5079,8 @@
             "LoopDesc": "Jln Rumah Tinggi",
             "Operator": "SBST",
             "OriginCode": "82009",
-            "PM_Offpeak_Freq": "10-14",
-            "PM_Peak_Freq": "08-14",
+            "PM_Offpeak_Freq": "09-14",
+            "PM_Peak_Freq": "09-14",
             "ServiceNo": "63"
         },
         {
@@ -5656,29 +5656,29 @@
             "ServiceNo": "8"
         },
         {
-            "AM_Offpeak_Freq": "12-15",
-            "AM_Peak_Freq": "08-12",
+            "AM_Offpeak_Freq": "10-16",
+            "AM_Peak_Freq": "09-14",
             "Category": "TRUNK",
             "DestinationCode": "14009",
             "Direction": 1,
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "67009",
-            "PM_Offpeak_Freq": "16-19",
-            "PM_Peak_Freq": "13-16",
+            "PM_Offpeak_Freq": "18-19",
+            "PM_Peak_Freq": "13-15",
             "ServiceNo": "80"
         },
         {
-            "AM_Offpeak_Freq": "12-18",
-            "AM_Peak_Freq": "09-12",
+            "AM_Offpeak_Freq": "10-18",
+            "AM_Peak_Freq": "09-13",
             "Category": "TRUNK",
             "DestinationCode": "67009",
             "Direction": 2,
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "14009",
-            "PM_Offpeak_Freq": "16-17",
-            "PM_Peak_Freq": "12-17",
+            "PM_Offpeak_Freq": "16-18",
+            "PM_Peak_Freq": "14-18",
             "ServiceNo": "80"
         },
         {
@@ -5747,7 +5747,7 @@
             "ServiceNo": "806"
         },
         {
-            "AM_Offpeak_Freq": "02-07",
+            "AM_Offpeak_Freq": "03-07",
             "AM_Peak_Freq": "03-06",
             "Category": "FEEDER",
             "DestinationCode": "59009",
@@ -5799,16 +5799,16 @@
             "ServiceNo": "80A"
         },
         {
-            "AM_Offpeak_Freq": "08-12",
-            "AM_Peak_Freq": "09-12",
+            "AM_Offpeak_Freq": "08-11",
+            "AM_Peak_Freq": "10-11",
             "Category": "TRUNK",
             "DestinationCode": "75009",
             "Direction": 1,
             "LoopDesc": "S'goon Ctrl",
             "Operator": "SBST",
             "OriginCode": "75009",
-            "PM_Offpeak_Freq": "14-17",
-            "PM_Peak_Freq": "08-14",
+            "PM_Offpeak_Freq": "13-17",
+            "PM_Peak_Freq": "08-15",
             "ServiceNo": "81"
         },
         {
@@ -6267,29 +6267,29 @@
             "ServiceNo": "92M"
         },
         {
-            "AM_Offpeak_Freq": "09-20",
-            "AM_Peak_Freq": "15-19",
+            "AM_Offpeak_Freq": "12-16",
+            "AM_Peak_Freq": "12-13",
             "Category": "TRUNK",
             "DestinationCode": "82009",
             "Direction": 1,
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "14009",
-            "PM_Offpeak_Freq": "18-25",
-            "PM_Peak_Freq": "20-20",
+            "PM_Offpeak_Freq": "15-23",
+            "PM_Peak_Freq": "13-14",
             "ServiceNo": "93"
         },
         {
-            "AM_Offpeak_Freq": "10-20",
-            "AM_Peak_Freq": "16-17",
+            "AM_Offpeak_Freq": "13-17",
+            "AM_Peak_Freq": "10-13",
             "Category": "TRUNK",
             "DestinationCode": "14009",
             "Direction": 2,
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "82009",
-            "PM_Offpeak_Freq": "19-24",
-            "PM_Peak_Freq": "15-18",
+            "PM_Offpeak_Freq": "14-24",
+            "PM_Peak_Freq": "14-15",
             "ServiceNo": "93"
         },
         {

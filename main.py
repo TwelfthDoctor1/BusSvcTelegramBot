@@ -2,9 +2,11 @@ import os
 import telebot
 from dotenv import load_dotenv
 from pathlib import Path
+from telebot import types
 from TransportAPI.APIHandler import TransportAPIHandler
 from TransportAPI.BusStopInfo import store_bus_stop_data, request_bus_stop_code_from_name
 from TransportAPI.BusService import store_bus_svc_data
+from UtilLib.JSONHandler import JSONHandler
 
 ENV_PATH = os.path.join(Path(__file__).resolve().parent, "RefKey.env")
 
@@ -23,14 +25,20 @@ store_bus_svc_data(API_KEY_LTA)
 
 bot = telebot.TeleBot(API_KEY_TG)
 
-bus_mem = ""
-svc_mem = ""
+# ======================================================================================================================
+# JSON Memory Handling
+json_mem = JSONHandler("MemoryData")
+gen_state = json_mem.generate_json({"NULL_DATA": ""})  # Temp Dict creation
+json_mem.formulate_json()
+
+if gen_state:
+    json_mem.delete_json_entry("NULL_DATA")  # Temp Dict Removal
 
 
 # ======================================================================================================================
 # Commands
 @bot.message_handler(commands=["start"])
-def bot_svc_start(message):
+def bot_svc_start(message: types.Message):
     msg = "Welcome to the Bus Timings Telegram Bot.\n" \
           "To start, please type /query_timing.\n\n" \
           "Program created by TwelfthDoctor1."
@@ -38,7 +46,7 @@ def bot_svc_start(message):
 
 
 @bot.message_handler(commands=["query_timing"])
-def query_timing(message):
+def query_timing(message: types.Message):
     sent_msg = bot.send_message(
         message.chat.id,
         "Enter either the following to query bus timings:"
@@ -48,7 +56,7 @@ def query_timing(message):
     bot.register_next_step_handler(sent_msg, explicit_buses)
 
 
-def explicit_buses(message):
+def explicit_buses(message: types.Message):
     if message.text == "/cancel":
         bot.send_message(message.chat.id, "Action cancelled.")
         return
@@ -59,9 +67,8 @@ def explicit_buses(message):
     bot.register_next_step_handler(sent_msg, parse_data, bus_stop_code)
 
 
-def parse_data(message, bus_stop_info: str, bus_svc_list_str: str = ""):
-    global bus_mem
-    global svc_mem
+def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str = ""):
+    mem_dict = dict()
 
     if message.text == "/cancel":
         bot.send_message(message.chat.id, "Action cancelled.")
@@ -86,11 +93,11 @@ def parse_data(message, bus_stop_info: str, bus_svc_list_str: str = ""):
 
     if bus_svc_list_str == "0":
         bus_svc_list = []
-        svc_mem = []
+        mem_dict["svc_mem"] = []
 
     elif isinstance(bus_svc_list_str, list):
         bus_svc_list = bus_svc_list_str
-        svc_mem = bus_svc_list
+        mem_dict["svc_mem"] = bus_svc_list
 
     else:
         bus_svc_list = bus_svc_list_str.split(",")
@@ -98,12 +105,12 @@ def parse_data(message, bus_stop_info: str, bus_svc_list_str: str = ""):
         for i in range(len(bus_svc_list)):
             bus_svc_list[i] = bus_svc_list[i].strip()
 
-        svc_mem = bus_svc_list
+        mem_dict["svc_mem"] = bus_svc_list
 
     # Formulate Header & Get Arrival Time
 
     # Custom Bus Stop
-    bus_mem = bus_stop_code
+    mem_dict["bus_mem"] = bus_stop_code
     returner = api_handler.request_arrival_time(bus_stop_code, bus_svc_list)
 
     bot.send_message(message.chat.id, returner[0])
@@ -127,23 +134,31 @@ def parse_data(message, bus_stop_info: str, bus_svc_list_str: str = ""):
         "List of Commands\n\nTo refresh: /refresh\nTo query: /query_timing\nTo clear: /clear"
     )
 
+    # Save data to JSON Mem
+    json_mem.update_specific_json(f"{message.chat.username}", mem_dict)
+    json_mem.update_json_file()
+
 
 @bot.message_handler(commands=["refresh"])
-def refresh_timings(message):
-    if bus_mem == "":
+def refresh_timings(message: types.Message):
+    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
+
+    if mem_dict["bus_mem"] == "":
         bot.send_message(message.chat.id, "You have not queried for a bus timing. Please use /query_timing instead.")
         return
 
-    parse_data(message, bus_mem, svc_mem)
+    parse_data(message, mem_dict["bus_mem"], mem_dict["svc_mem"])
 
 
 @bot.message_handler(commands=["clear"])
-def clear_mem(message):
-    global bus_mem
-    global svc_mem
+def clear_mem(message: types.Message):
+    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
 
-    bus_mem = ""
-    svc_mem = ""
+    mem_dict["bus_mem"] = ""
+    mem_dict["svc_mem"] = []
+
+    json_mem.update_specific_json(f"{message.chat.username}", mem_dict)
+    json_mem.update_json_file()
 
     bot.send_message(message.chat.id, "Memory cleared. Please use /query_timing to start again.")
 

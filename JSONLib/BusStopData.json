@@ -4448,8 +4448,8 @@
         {
             "BusStopCode": "16189",
             "Description": "Information Technology",
-            "Latitude": 1.309851,
-            "Longitude": 103.768132,
+            "Latitude": 1.297228,
+            "Longitude": 103.772756,
             "RoadName": "Kent Ridge Cres"
         },
         {
@@ -34838,6 +34838,13 @@
             "Latitude": 1.33980186622645,
             "Longitude": 103.96388189995498,
             "RoadName": "Somapah Rd"
+        },
+        {
+            "BusStopCode": "96461",
+            "Description": "Before Aviation Park Road",
+            "Latitude": 1.352485,
+            "Longitude": 104.030008,
+            "RoadName": "Tanah Merah Coast Rd"
         },
         {
             "BusStopCode": "96471",

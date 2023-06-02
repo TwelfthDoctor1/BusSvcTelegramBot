@@ -17,7 +17,7 @@ Note: Changes displayed here will take longer to show up on the Micropython vers
 
 Before running the code, the following modules are required:
 * python-dotenv
-* *pyTelegramBotAPI
+* pyTelegramBotAPI
 
 You also need to setup a `RefKey.env` file with the following values:
 
