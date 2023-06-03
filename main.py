@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from telebot import types
 from TransportAPI.APIHandler import TransportAPIHandler
-from TransportAPI.BusStopInfo import store_bus_stop_data, request_bus_stop_code_from_name
+from TransportAPI.BusStopInfo import store_bus_stop_data, request_bus_stop_code_from_name, get_nearby_bus_stops
 from TransportAPI.BusService import store_bus_svc_data
 from UtilLib.JSONHandler import JSONHandler
 
@@ -56,12 +56,14 @@ def query_timing(message: types.Message):
     bot.register_next_step_handler(sent_msg, explicit_buses)
 
 
-def explicit_buses(message: types.Message):
+def explicit_buses(message: types.Message, bus_stop_code: str = ""):
     if message.text == "/cancel":
         bot.send_message(message.chat.id, "Action cancelled.")
         return
 
-    bus_stop_code = message.text
+    if bus_stop_code == "":
+        bus_stop_code = message.text
+
     sent_msg = bot.send_message(message.chat.id, "Enter the explicit bus services to see only. Otherwise leave 0"
                                                  " to see all services. (i.e.: 5, 12e, 46)")
     bot.register_next_step_handler(sent_msg, parse_data, bus_stop_code)
@@ -161,6 +163,61 @@ def clear_mem(message: types.Message):
     json_mem.update_json_file()
 
     bot.send_message(message.chat.id, "Memory cleared. Please use /query_timing to start again.")
+
+
+@bot.message_handler(commands=["search"])
+def search_query(message: types.Message):
+    button_kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    location_button = types.KeyboardButton("Send Location", request_location=True)
+    cancel_button = types.KeyboardButton("Cancel")
+    button_kb.add(location_button, cancel_button)
+
+    sent_msg = bot.send_message(
+        message.chat.id, "Select the \"Send Location\" button to send your location, or use the \"Attachment\" button "
+                         "to send a location. To exit, press \"Cancel\".",
+        reply_markup=button_kb
+    )
+    bot.register_next_step_handler(sent_msg, search_query_proc)
+
+
+def search_query_proc(message: types.Message):
+    if message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=types.ReplyKeyboardRemove())
+        return
+
+    lon = message.location.longitude
+    lat = message.location.latitude
+
+    nearby_stops = get_nearby_bus_stops(lon, lat)
+
+    msg = "Nearby Bus Stops\n"
+
+    if len(nearby_stops) == 0:
+        msg += f"\nNo nearby Bus Stops."
+
+    else:
+        for i in range(len(nearby_stops)):
+            msg += f"\n{i + 1}. {nearby_stops[i][2]} @ {nearby_stops[i][1]} [{nearby_stops[i][0]}] ({nearby_stops[i][3]} m)"
+
+        msg += "\n\nEnter the list number to view the bus timings for that bus stop: "
+
+    sent_msg = bot.send_message(message.chat.id, msg, reply_markup=types.ReplyKeyboardRemove())
+
+    bot.register_next_step_handler(sent_msg, post_search_query, nearby_stops)
+
+
+def post_search_query(message: types.Message, nearby_stops: list):
+    if message.text == "/cancel":
+        bot.send_message(message.chat.id, "Action cancelled.")
+        return
+    elif message.text.isdigit() is False:
+        bot.send_message(message.chat.id, "Unknown option. Please try again.")
+        return search_query(message)
+    elif int(message.text) <= 0 or int(message.text) > len(nearby_stops):
+        bot.send_message(message.chat.id, "Option out of range. Please try again.")
+        return search_query(message)
+
+    return explicit_buses(message, nearby_stops[int(message.text) - 1][0])
 
 
 # Start Bot and detect commands

@@ -3,10 +3,12 @@ import os
 import ssl
 import urllib.request
 from dotenv import load_dotenv
+from math import sqrt
 from pathlib import Path
 from UtilLib.JSONHandler import JSONHandler
 
 bus_stop_data: JSONHandler
+LON_LAT_CONV = 111139
 
 
 def request_bus_stop_name_lta(bus_stop_code: int or str, api_key: str, debug: bool = False):
@@ -148,6 +150,50 @@ def request_bus_stop_code_from_name(stop_name: str, road_name: str = ""):
             return data["BusStopCode"]
 
     return "00000"
+
+
+def get_nearby_bus_stops(lon: float, lat: float):
+    nearby_stops = []
+    sorted_nearby_stops = []
+    disp_sorter = []
+
+    lon_m = lon * LON_LAT_CONV
+    lat_m = lat * LON_LAT_CONV
+
+    for data in bus_stop_data.return_specific_json("value"):
+        bus_lon_m = data["Longitude"] * LON_LAT_CONV
+        bus_lat_m = data["Latitude"] * LON_LAT_CONV
+
+        diff_lon = max(lon_m, bus_lon_m) - min(lon_m, bus_lon_m)
+        diff_lat = max(lat_m, bus_lat_m) - min(lat_m, bus_lat_m)
+
+        disp = sqrt(diff_lon * diff_lon + diff_lat * diff_lat)
+
+        if disp <= 500:
+            nearby_stops.append(
+                (
+                    data["BusStopCode"],
+                    data["RoadName"],
+                    data["Description"],
+                    round(disp)
+                )
+            )
+            disp_sorter.append(
+                (
+                    disp,
+                    len(nearby_stops) - 1
+                )
+            )
+
+    disp_sorter = sorted(disp_sorter)
+
+    for (disp, i) in disp_sorter:
+        sorted_nearby_stops.append(nearby_stops[i])
+
+        if len(sorted_nearby_stops) == 15:
+            break
+
+    return sorted_nearby_stops
 
 
 if __name__ == "__main__":
