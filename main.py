@@ -28,11 +28,8 @@ bot = telebot.TeleBot(API_KEY_TG)
 # ======================================================================================================================
 # JSON Memory Handling
 json_mem = JSONHandler("MemoryData")
-gen_state = json_mem.generate_json({"NULL_DATA": ""})  # Temp Dict creation
+gen_state = json_mem.generate_json(dict())
 json_mem.formulate_json()
-
-if gen_state:
-    json_mem.delete_json_entry("NULL_DATA")  # Temp Dict Removal
 
 
 # ======================================================================================================================
@@ -51,12 +48,12 @@ def query_timing(message: types.Message):
         message.chat.id,
         "Enter either the following to query bus timings:"
         "\n- 5-digit Bus Stop Code"
-        "\n- Bus Stop Name and/or Road Name (i.e. Aft Blk 87 @ Zion Road)"
+        "\n- Bus Stop Name and/or Road Name (i.e. Aft Blk 87 @ Zion Road OR Aft Blk 87)"
     )
-    bot.register_next_step_handler(sent_msg, explicit_buses)
+    bot.register_next_step_handler(sent_msg, filter_explicit_buses)
 
 
-def explicit_buses(message: types.Message, bus_stop_code: str = ""):
+def filter_explicit_buses(message: types.Message, bus_stop_code: str = ""):
     if message.text == "/cancel":
         bot.send_message(message.chat.id, "Action cancelled.")
         return
@@ -64,8 +61,12 @@ def explicit_buses(message: types.Message, bus_stop_code: str = ""):
     if bus_stop_code == "":
         bus_stop_code = message.text
 
-    sent_msg = bot.send_message(message.chat.id, "Enter the explicit bus services to see only. Otherwise leave 0"
-                                                 " to see all services. (i.e.: 5, 12e, 46)")
+    svc_list = api_handler.request_bus_stop_svc_list(bus_stop_code)
+
+    bot.send_message(message.chat.id, "Enter the explicit bus services to see only. Otherwise leave 0"
+                     " to see all services. (i.e.: 5, 12e, 46)")
+
+    sent_msg = bot.send_message(message.chat.id, f"Services:\n{svc_list}")
     bot.register_next_step_handler(sent_msg, parse_data, bus_stop_code)
 
 
@@ -217,7 +218,7 @@ def post_search_query(message: types.Message, nearby_stops: list):
         bot.send_message(message.chat.id, "Option out of range. Please try again.")
         return search_query(message)
 
-    return explicit_buses(message, nearby_stops[int(message.text) - 1][0])
+    return filter_explicit_buses(message, nearby_stops[int(message.text) - 1][0])
 
 
 # Start Bot and detect commands

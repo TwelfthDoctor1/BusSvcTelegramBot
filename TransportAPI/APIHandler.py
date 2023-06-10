@@ -86,3 +86,17 @@ class TransportAPIHandler:
                 ]
             )
         return main_returner
+
+    def request_bus_stop_svc_list(self, bus_stop_code: str):
+        returner = ""
+
+        svc_returner = request_bus_stop_timing(bus_stop_code=bus_stop_code, api_key=self.api_key, svc_num=[],
+                                               return_svc_list=True)
+
+        for i in range(len(svc_returner)):
+            if i == 0:
+                returner = str(svc_returner[i][0])
+            else:
+                returner += f", {svc_returner[i][0]}"
+
+        return returner

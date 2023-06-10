@@ -38,7 +38,7 @@ def calculate_est_duration(dur_1: int, dur_2: int, dur_3: int):
 
 
 def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: list,
-                            fallback_header: bool = False, debug: bool = False):
+                            fallback_header: bool = False, debug: bool = False, return_svc_list=False):
     """
     Core Function to get and return the Timings of Services for a Bus Stop.
     For a specific number in Services, define the Service Number.
@@ -49,6 +49,7 @@ def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: li
                     list.
     :param fallback_header: A boolean state that determines whether the fallback header should be used. (Shows the code)
     :param debug: A boolean state to show debug text
+    :param return_svc_list: Returns the Bus Services for the bus stop, WILL NOT RETURN TIMING!
     :return: A Tuple of 18 values (exc. !):
              [0] -> Service Number,
              [1] -> Service Operator,
@@ -189,6 +190,8 @@ def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: li
                 sorted_sp_bus.append(sp_bus)
 
         # print(bus_list)
+        if return_svc_list is True:
+            return bus_list
 
         if fallback_header is True and debug is True:
             print(
