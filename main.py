@@ -53,6 +53,17 @@ def query_timing(message: types.Message):
     bot.register_next_step_handler(sent_msg, filter_explicit_buses)
 
 
+@bot.message_handler(commands=["filter"])
+def filter_preface(message: types.Message):
+    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
+
+    if mem_dict["bus_mem"] == "":
+        bot.send_message(message.chat.id, "You have not queried for a bus timing. Please use /query_timing instead.")
+        return
+
+    return filter_explicit_buses(message, mem_dict["bus_mem"])
+
+
 def filter_explicit_buses(message: types.Message, bus_stop_code: str = ""):
     if message.text == "/cancel":
         bot.send_message(message.chat.id, "Action cancelled.")
@@ -60,6 +71,17 @@ def filter_explicit_buses(message: types.Message, bus_stop_code: str = ""):
 
     if bus_stop_code == "":
         bus_stop_code = message.text
+
+    if not bus_stop_code.isdigit():
+        bus_stop_info_data = bus_stop_code.split("@")
+
+        for i in range(len(bus_stop_info_data)):
+            bus_stop_info_data[i] = bus_stop_info_data[i].strip()
+
+        if len(bus_stop_info_data) == 1:
+            bus_stop_code = request_bus_stop_code_from_name(bus_stop_info_data[0])
+        else:
+            bus_stop_code = request_bus_stop_code_from_name(bus_stop_info_data[0], bus_stop_info_data[1])
 
     svc_list = api_handler.request_bus_stop_svc_list(bus_stop_code)
 
