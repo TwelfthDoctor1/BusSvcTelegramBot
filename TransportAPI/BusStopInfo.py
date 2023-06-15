@@ -142,14 +142,23 @@ def return_bus_stop_name_json(bus_stop_code: str):
 
 
 def request_bus_stop_code_from_name(stop_name: str, road_name: str = ""):
+    bus_stop = []
     for data in bus_stop_data.return_specific_json("value"):
-        if data["Description"].lower() == stop_name.lower() and road_name == "":
-            return data["BusStopCode"]
-
         if data["Description"].lower() == stop_name.lower() and data["RoadName"].lower() == road_name:
-            return data["BusStopCode"]
+            bus_stop.append((data["BusStopCode"], data["Description"], data["RoadName"]))
+            continue
+        elif data["Description"].lower() == stop_name.lower() and road_name == "":
+            bus_stop.append((data["BusStopCode"], data["Description"], data["RoadName"]))
+            continue
 
-    return "00000"
+    if len(bus_stop) == 0:
+        return "00000"
+
+    elif len(bus_stop) == 1:
+        return bus_stop[0][0]
+
+    else:
+        return bus_stop
 
 
 def get_nearby_bus_stops(lon: float, lat: float):

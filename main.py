@@ -37,7 +37,7 @@ json_mem.formulate_json()
 @bot.message_handler(commands=["start"])
 def bot_svc_start(message: types.Message):
     msg = "Welcome to the Bus Timings Telegram Bot.\n" \
-          "To start, please type /query_timing.\n\n" \
+          "To start, please type /query_timing or /search.\n\n" \
           "Program created by TwelfthDoctor1."
     bot.send_message(message.chat.id, msg)
 
@@ -58,13 +58,15 @@ def filter_preface(message: types.Message):
     mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
 
     if mem_dict["bus_mem"] == "":
-        bot.send_message(message.chat.id, "You have not queried for a bus timing. Please use /query_timing instead.")
+        bot.send_message(message.chat.id, "You cannot filter for explicit buses if you have not queried for a bus "
+                                          "timing. Please use /query_timing instead.")
         return
 
     return filter_explicit_buses(message, mem_dict["bus_mem"])
 
 
-def filter_explicit_buses(message: types.Message, bus_stop_code: str = ""):
+def filter_explicit_buses(message: types.Message, bus_stop_code: str or list = ""):
+    msg = f"Bus Stops matching {bus_stop_code}\n"
     if message.text == "/cancel":
         bot.send_message(message.chat.id, "Action cancelled.")
         return
@@ -72,7 +74,7 @@ def filter_explicit_buses(message: types.Message, bus_stop_code: str = ""):
     if bus_stop_code == "":
         bus_stop_code = message.text
 
-    if not bus_stop_code.isdigit():
+    if not bus_stop_code.isdigit() and not isinstance(bus_stop_code, list):
         bus_stop_info_data = bus_stop_code.split("@")
 
         for i in range(len(bus_stop_info_data)):
@@ -83,6 +85,36 @@ def filter_explicit_buses(message: types.Message, bus_stop_code: str = ""):
         else:
             bus_stop_code = request_bus_stop_code_from_name(bus_stop_info_data[0], bus_stop_info_data[1])
 
+    if isinstance(bus_stop_code, str):
+        inner_filter_proc(message, bus_stop_code)
+
+    elif isinstance(bus_stop_code, list):
+        for i in range(len(bus_stop_code)):
+            msg += f"\n{i + 1}. {bus_stop_code[i][1]} @ {bus_stop_code[i][2]} [{bus_stop_code[i][0]}]"
+
+        msg += "\n\nEnter the list number to view the bus timings for that bus stop or /cancel to stop filter: "
+
+        sent_msg = bot.send_message(message.chat.id, msg)
+        bot.register_next_step_handler(sent_msg, pre_filter_get_bus_stop, bus_stop_code)
+
+
+def pre_filter_get_bus_stop(message: types.Message, bus_stop_code):
+    if message.text == "/cancel":
+        bot.send_message(message.chat.id, "Action cancelled.")
+        return
+
+    elif message.text.isdigit() is False:
+        bot.send_message(message.chat.id, "Unknown option. Please try again.")
+        return filter_explicit_buses(message, bus_stop_code)
+
+    elif int(message.text) <= 0 or int(message.text) > len(bus_stop_code):
+        bot.send_message(message.chat.id, "Option out of range. Please try again.")
+        return filter_explicit_buses(message, bus_stop_code)
+
+    return inner_filter_proc(message, bus_stop_code[int(message.text) - 1][0])
+
+
+def inner_filter_proc(message: types.Message, bus_stop_code: str = ""):
     svc_list = api_handler.request_bus_stop_svc_list(bus_stop_code)
 
     bot.send_message(message.chat.id, "Enter the explicit bus services to see only. Otherwise leave 0"
@@ -156,7 +188,7 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
 
     bot.send_message(
         message.chat.id,
-        "List of Commands\n\nTo refresh: /refresh\nTo query: /query_timing\nTo clear: /clear"
+        "List of Commands\n\nTo refresh: /refresh\nTo query: /query_timing\nTo filter: /filter\nTo clear: /clear"
     )
 
     # Save data to JSON Mem
@@ -185,7 +217,7 @@ def clear_mem(message: types.Message):
     json_mem.update_specific_json(f"{message.chat.username}", mem_dict)
     json_mem.update_json_file()
 
-    bot.send_message(message.chat.id, "Memory cleared. Please use /query_timing to start again.")
+    bot.send_message(message.chat.id, "Memory cleared. Please use /query_timing or /search to start again.")
 
 
 @bot.message_handler(commands=["search"])
@@ -222,7 +254,7 @@ def search_query_proc(message: types.Message):
         for i in range(len(nearby_stops)):
             msg += f"\n{i + 1}. {nearby_stops[i][2]} @ {nearby_stops[i][1]} [{nearby_stops[i][0]}] ({nearby_stops[i][3]} m)"
 
-        msg += "\n\nEnter the list number to view the bus timings for that bus stop: "
+        msg += "\n\nEnter the list number to view the bus timings for that bus stop or /cancel to stop search: "
 
     sent_msg = bot.send_message(message.chat.id, msg, reply_markup=types.ReplyKeyboardRemove())
 
@@ -233,9 +265,11 @@ def post_search_query(message: types.Message, nearby_stops: list):
     if message.text == "/cancel":
         bot.send_message(message.chat.id, "Action cancelled.")
         return
+
     elif message.text.isdigit() is False:
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
         return search_query(message)
+
     elif int(message.text) <= 0 or int(message.text) > len(nearby_stops):
         bot.send_message(message.chat.id, "Option out of range. Please try again.")
         return search_query(message)
