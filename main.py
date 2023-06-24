@@ -319,7 +319,7 @@ def list_favourites(message: types.Message):
 
     for i in range(len(mem_dict["favourites"])):
         msg += f"\n{i + 1}. {return_bus_stop_name_json(mem_dict['favourites'][i][0])[0]} | " \
-               f"{str(mem_dict['favourites'][i][1])}"
+               f"{str(', ').join(mem_dict['favourites'][i][1])}"
 
     msg += f"\n\nEnter the list number to view the bus timings for that bus stop or /cancel to stop: "
 
@@ -358,7 +358,7 @@ def delete_favourites_list(message: types.Message):
 
     for i in range(len(mem_dict["favourites"])):
         msg += f"\n{i + 1}. {return_bus_stop_name_json(mem_dict['favourites'][i][0])[0]} | " \
-               f"{str(mem_dict['favourites'][i][1])}"
+               f"{str(', ').join(mem_dict['favourites'][i][1])}"
 
     msg += f"\n\nEnter the list number to delete that bus timing for that bus stop or /cancel to stop: "
 
