@@ -3,6 +3,8 @@ import telebot
 from dotenv import load_dotenv
 from pathlib import Path
 from telebot import types
+from TelegramBotFuncs.KeyboardHandling import start_menu_keyboard, destroy_keyboard, location_keyboard, \
+    option_keyboard, get_option_number
 from TransportAPI.APIHandler import TransportAPIHandler
 from TransportAPI.BusStopInfo import store_bus_stop_data, request_bus_stop_code_from_name, get_nearby_bus_stops, \
     return_bus_stop_name_json
@@ -40,7 +42,7 @@ def bot_svc_start(message: types.Message):
     msg = "Welcome to the Bus Timings Telegram Bot.\n" \
           "To start, please type /query_timing or /search.\n\n" \
           "Program created by TwelfthDoctor1."
-    bot.send_message(message.chat.id, msg)
+    bot.send_message(message.chat.id, msg, reply_markup=start_menu_keyboard())
 
 
 @bot.message_handler(commands=["query_timing"])
@@ -49,18 +51,23 @@ def query_timing(message: types.Message):
         message.chat.id,
         "Enter either the following to query bus timings:"
         "\n- 5-digit Bus Stop Code"
-        "\n- Bus Stop Name and/or Road Name (i.e. Aft Blk 87 @ Zion Road OR Aft Blk 87)"
+        "\n- Bus Stop Name and/or Road Name (i.e. Aft Blk 87 @ Zion Road OR Aft Blk 87)",
+        reply_markup=destroy_keyboard()
     )
     bot.register_next_step_handler(sent_msg, filter_explicit_buses)
 
 
 @bot.message_handler(commands=["filter"])
 def filter_preface(message: types.Message):
-    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
+    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
 
     if mem_dict["bus_mem"] == "":
-        bot.send_message(message.chat.id, "You cannot filter for explicit buses if you have not queried for a bus "
-                                          "timing. Please use /query_timing or /search instead.")
+        bot.send_message(
+            message.chat.id,
+            "You cannot filter for explicit buses if you have not queried for a bus timing. Please use /query_timing "
+            "or /search instead.",
+            reply_markup=start_menu_keyboard()
+        )
         return
 
     return filter_explicit_buses(message, mem_dict["bus_mem"])
@@ -68,8 +75,9 @@ def filter_preface(message: types.Message):
 
 def filter_explicit_buses(message: types.Message, bus_stop_code: str or list = ""):
     msg = f"Bus Stops matching {bus_stop_code}\n"
-    if message.text == "/cancel":
-        bot.send_message(message.chat.id, "Action cancelled.")
+    msg_data = []
+    if message.text == "/cancel" or message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
     if bus_stop_code == "":
@@ -92,17 +100,22 @@ def filter_explicit_buses(message: types.Message, bus_stop_code: str or list = "
     elif isinstance(bus_stop_code, list):
         for i in range(len(bus_stop_code)):
             msg += f"\n{i + 1}. {bus_stop_code[i][1]} @ {bus_stop_code[i][2]} [{bus_stop_code[i][0]}]"
+            msg_data.append(f"{bus_stop_code[i][1]} @ {bus_stop_code[i][2]} [{bus_stop_code[i][0]}]")
 
         msg += "\n\nEnter the list number to view the bus timings for that bus stop or /cancel to stop filter: "
 
-        sent_msg = bot.send_message(message.chat.id, msg)
-        bot.register_next_step_handler(sent_msg, pre_filter_get_bus_stop, bus_stop_code)
+        sent_msg = bot.send_message(message.chat.id, msg, reply_markup=option_keyboard(msg_data, 1))
+        bot.register_next_step_handler(sent_msg, pre_filter_get_bus_stop, bus_stop_code, msg_data)
 
 
-def pre_filter_get_bus_stop(message: types.Message, bus_stop_code):
-    if message.text == "/cancel":
-        bot.send_message(message.chat.id, "Action cancelled.")
+def pre_filter_get_bus_stop(message: types.Message, bus_stop_code, msg_data):
+    if message.text == "/cancel" or message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
+
+    elif message.text.startswith("[") is True:
+        opt_num = get_option_number(message.text, msg_data)
+        return inner_filter_proc(message, bus_stop_code[int(opt_num) - 1][0])
 
     elif message.text.isdigit() is False:
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
@@ -119,17 +132,17 @@ def inner_filter_proc(message: types.Message, bus_stop_code: str = ""):
     svc_list = api_handler.request_bus_stop_svc_list(bus_stop_code)
 
     bot.send_message(message.chat.id, "Enter the explicit bus services to see only. Otherwise leave 0"
-                     " to see all services. (i.e.: 5, 12e, 46)")
+                     " to see all services. (i.e.: 5, 12e, 46)", reply_markup=destroy_keyboard())
 
     sent_msg = bot.send_message(message.chat.id, f"Services:\n{svc_list}")
     bot.register_next_step_handler(sent_msg, parse_data, bus_stop_code)
 
 
 def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str = ""):
-    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
+    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
 
-    if message.text == "/cancel":
-        bot.send_message(message.chat.id, "Action cancelled.")
+    if message.text == "/cancel" or message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
     if bus_stop_info.isdigit():
@@ -190,21 +203,23 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
     bot.send_message(
         message.chat.id,
         "List of Commands\n\nTo refresh: /refresh\nTo query: /query_timing\nTo search: /search\nTo filter: /filter"
-        "\nTo clear: /clear"
+        "\nTo clear: /clear",
+        reply_markup=start_menu_keyboard()
     )
 
     # Save data to JSON Mem
-    json_mem.update_specific_json(f"{message.chat.username}", mem_dict)
+    json_mem.update_specific_json(f"{message.from_user.username}", mem_dict)
     json_mem.update_json_file()
 
 
 @bot.message_handler(commands=["refresh"])
 def refresh_timings(message: types.Message):
-    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
+    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
 
     if mem_dict["bus_mem"] == "":
         bot.send_message(
-            message.chat.id, "You have not queried for a bus timing. Please use /query_timing or /search instead."
+            message.chat.id, "You have not queried for a bus timing. Please use /query_timing or /search instead.",
+            reply_markup=start_menu_keyboard()
         )
         return
 
@@ -213,35 +228,35 @@ def refresh_timings(message: types.Message):
 
 @bot.message_handler(commands=["clear"])
 def clear_mem(message: types.Message):
-    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
+    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
 
     mem_dict["bus_mem"] = ""
     mem_dict["svc_mem"] = []
 
-    json_mem.update_specific_json(f"{message.chat.username}", mem_dict)
+    json_mem.update_specific_json(f"{message.from_user.username}", mem_dict)
     json_mem.update_json_file()
 
-    bot.send_message(message.chat.id, "Memory cleared. Please use /query_timing or /search to start again.")
+    bot.send_message(
+        message.chat.id,
+        "Memory cleared. Please use /query_timing or /search to start again.",
+        reply_markup=start_menu_keyboard()
+    )
 
 
 @bot.message_handler(commands=["search"])
 def search_query(message: types.Message):
-    button_kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    location_button = types.KeyboardButton("Send Location", request_location=True)
-    cancel_button = types.KeyboardButton("Cancel")
-    button_kb.add(location_button, cancel_button)
-
     sent_msg = bot.send_message(
         message.chat.id, "Select the \"Send Location\" button to send your location, or use the \"Attachment\" button "
                          "to send a location. To exit, press \"Cancel\".",
-        reply_markup=button_kb
+        reply_markup=location_keyboard()
     )
     bot.register_next_step_handler(sent_msg, search_query_proc)
 
 
 def search_query_proc(message: types.Message):
-    if message.text == "Cancel":
-        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=types.ReplyKeyboardRemove())
+    msg_data = []
+    if message.text == "/cancel" or message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
     lon = message.location.longitude
@@ -258,18 +273,25 @@ def search_query_proc(message: types.Message):
         for i in range(len(nearby_stops)):
             msg += f"\n{i + 1}. {nearby_stops[i][2]} @ {nearby_stops[i][1]} [{nearby_stops[i][0]}] " \
                    f"({nearby_stops[i][3]} m)"
+            msg_data.append(
+                f"{nearby_stops[i][2]} @ {nearby_stops[i][1]} [{nearby_stops[i][0]}] ({nearby_stops[i][3]} m)"
+            )
 
         msg += "\n\nEnter the list number to view the bus timings for that bus stop or /cancel to stop: "
 
-    sent_msg = bot.send_message(message.chat.id, msg, reply_markup=types.ReplyKeyboardRemove())
+    sent_msg = bot.send_message(message.chat.id, msg, reply_markup=option_keyboard(msg_data, 1))
 
-    bot.register_next_step_handler(sent_msg, post_search_query, nearby_stops)
+    bot.register_next_step_handler(sent_msg, post_search_query, nearby_stops, msg_data)
 
 
-def post_search_query(message: types.Message, nearby_stops: list):
-    if message.text == "/cancel":
-        bot.send_message(message.chat.id, "Action cancelled.")
+def post_search_query(message: types.Message, nearby_stops: list, msg_data):
+    if message.text == "/cancel" or message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
+
+    elif message.text.startswith("[") is True:
+        opt_num = get_option_number(message.text, msg_data)
+        return filter_explicit_buses(message, nearby_stops[int(opt_num) - 1][0])
 
     elif message.text.isdigit() is False:
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
@@ -284,34 +306,40 @@ def post_search_query(message: types.Message, nearby_stops: list):
 
 @bot.message_handler(commands=["add_to_favourites"])
 def add_to_favourites(message: types.Message):
-    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
+    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
 
     if mem_dict["bus_mem"] == "":
         bot.send_message(
-            message.chat.id, "You have not queried for a bus timing. Please use /query_timing or /search instead."
+            message.chat.id, "You have not queried for a bus timing. Please use /query_timing or /search instead.",
+            reply_markup=start_menu_keyboard()
         )
         return
 
-    # ERROR AREA
     if mem_dict.get("favourites") is not None:
         mem_dict["favourites"].append([mem_dict["bus_mem"], mem_dict["svc_mem"]])
 
     else:
         mem_dict["favourites"] = [[mem_dict["bus_mem"], mem_dict["svc_mem"]]]
 
-    json_mem.update_specific_json(f"{message.chat.username}", mem_dict)
+    json_mem.update_specific_json(f"{message.from_user.username}", mem_dict)
     json_mem.update_json_file()
 
-    bot.send_message(message.chat.id, "The current bus timing query has been added to favourites.")
+    bot.send_message(
+        message.chat.id,
+        "The current bus timing query has been added to favourites.",
+        reply_markup=start_menu_keyboard()
+    )
 
 
 @bot.message_handler(commands=["favourites"])
 def list_favourites(message: types.Message):
-    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
+    msg_data = []
+    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
 
     if mem_dict.get("favourites") is None or mem_dict.get("favourites") == []:
         bot.send_message(
-            message.chat.id, "No favourite bus timing queries."
+            message.chat.id, "No favourite bus timing queries.",
+            reply_markup=start_menu_keyboard()
         )
         return
 
@@ -320,18 +348,30 @@ def list_favourites(message: types.Message):
     for i in range(len(mem_dict["favourites"])):
         msg += f"\n{i + 1}. {return_bus_stop_name_json(mem_dict['favourites'][i][0])[0]} | " \
                f"{str(', ').join(mem_dict['favourites'][i][1])}"
+        msg_data.append(
+            f"{return_bus_stop_name_json(mem_dict['favourites'][i][0])[0]} | "
+            f"{str(', ').join(mem_dict['favourites'][i][1])}"
+        )
 
     msg += f"\n\nEnter the list number to view the bus timings for that bus stop or /cancel to stop: "
 
-    sent_msg = bot.send_message(message.chat.id, msg)
+    sent_msg = bot.send_message(
+        message.chat.id,
+        msg,
+        reply_markup=option_keyboard(msg_data, 1)
+    )
 
-    bot.register_next_step_handler(sent_msg, fav_post_proc, mem_dict["favourites"])
+    bot.register_next_step_handler(sent_msg, fav_post_proc, mem_dict["favourites"], msg_data)
 
 
-def fav_post_proc(message: types.Message, fav_list):
-    if message.text == "/cancel":
-        bot.send_message(message.chat.id, "Action cancelled.")
+def fav_post_proc(message: types.Message, fav_list, msg_data):
+    if message.text == "/cancel" or message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
+
+    elif message.text.startswith("[") is True:
+        opt_num = get_option_number(message.text, msg_data)
+        return parse_data(message, fav_list[int(opt_num) - 1][0], fav_list[int(opt_num) - 1][1])
 
     elif message.text.isdigit() is False:
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
@@ -346,11 +386,12 @@ def fav_post_proc(message: types.Message, fav_list):
 
 @bot.message_handler(commands=["delete_from_favourites"])
 def delete_favourites_list(message: types.Message):
-    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
+    msg_data = []
+    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
 
     if mem_dict.get("favourites") is None or len(mem_dict["favourites"]) == 0:
         bot.send_message(
-            message.chat.id, "No favourite bus timing queries."
+            message.chat.id, "No favourite bus timing queries.", start_menu_keyboard()
         )
         return
 
@@ -359,18 +400,27 @@ def delete_favourites_list(message: types.Message):
     for i in range(len(mem_dict["favourites"])):
         msg += f"\n{i + 1}. {return_bus_stop_name_json(mem_dict['favourites'][i][0])[0]} | " \
                f"{str(', ').join(mem_dict['favourites'][i][1])}"
+        msg_data.append(
+            f"{return_bus_stop_name_json(mem_dict['favourites'][i][0])[0]} | "
+            f"{str(', ').join(mem_dict['favourites'][i][1])}"
+        )
 
     msg += f"\n\nEnter the list number to delete that bus timing for that bus stop or /cancel to stop: "
 
-    sent_msg = bot.send_message(message.chat.id, msg)
+    sent_msg = bot.send_message(message.chat.id, msg, reply_markup=option_keyboard(msg_data, 1))
 
-    bot.register_next_step_handler(sent_msg, del_fav_proc, mem_dict["favourites"])
+    bot.register_next_step_handler(sent_msg, del_fav_proc, mem_dict["favourites"], msg_data)
 
 
-def del_fav_proc(message: types.Message, fav_list):
-    if message.text == "/cancel":
-        bot.send_message(message.chat.id, "Action cancelled.")
+def del_fav_proc(message: types.Message, fav_list, msg_data):
+    pos = -1
+    if message.text == "/cancel" or message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
+
+    elif message.text.startswith("[") is True:
+        opt_num = get_option_number(message.text, msg_data)
+        pos = int(opt_num) - 1
 
     elif message.text.isdigit() is False:
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
@@ -380,15 +430,49 @@ def del_fav_proc(message: types.Message, fav_list):
         bot.send_message(message.chat.id, "Option out of range. Please try again.")
         return delete_favourites_list(message)
 
-    mem_dict = json_mem.return_specific_json(f"{message.chat.username}")
+    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
 
-    mem_dict["favourites"].pop(int(message.text) - 1)
+    if pos <= -1:
+        pos = int(message.text) - 1
 
-    json_mem.update_specific_json(f"{message.chat.username}", mem_dict)
+    mem_dict["favourites"].pop(pos)
+
+    json_mem.update_specific_json(f"{message.from_user.username}", mem_dict)
     json_mem.update_json_file()
 
-    bot.send_message(message.chat.id, "The selected bus timing has been deleted from favourites.")
+    bot.send_message(
+        message.chat.id,
+        "The selected bus timing has been deleted from favourites.",
+        reply_markup=start_menu_keyboard()
+    )
 
 
+@bot.message_handler(commands=["shutdown"])
+def shutdown_bot(message: types.Message):
+    if message.from_user.username == "TwelfthDoctor1":
+        return bot.stop_bot()
+
+
+@bot.message_handler(func=lambda message: True)
+def kb_text_redirect(message: types.Message):
+    if message.text == "Query Timing":
+        return query_timing(message)
+    elif message.text == "Search":
+        return search_query(message)
+    elif message.text == "Refresh":
+        return refresh_timings(message)
+    elif message.text == "Filter":
+        return filter_preface(message)
+    elif message.text == "Clear":
+        return clear_mem(message)
+    elif message.text == "Add to Favourites":
+        return add_to_favourites(message)
+    elif message.text == "Favourites":
+        return list_favourites(message)
+    elif message.text == "Delete from Favourites":
+        return delete_favourites_list(message)
+
+
+# ======================================================================================================================
 # Start Bot and detect commands
 bot.infinity_polling()
