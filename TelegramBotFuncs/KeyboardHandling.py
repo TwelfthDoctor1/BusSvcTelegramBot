@@ -7,13 +7,13 @@ def start_menu_keyboard():
     kb.add(
         types.KeyboardButton("Query Timing"),
         types.KeyboardButton("Search"),
-        types.KeyboardButton("Favourites"),
-        types.KeyboardButton("Delete from Favourites"),
-        types.KeyboardButton("Cancel"),
         types.KeyboardButton("Refresh"),
         types.KeyboardButton("Filter"),
+        types.KeyboardButton("Cancel"),
         types.KeyboardButton("Clear"),
-        types.KeyboardButton("Add to Favourites")
+        types.KeyboardButton("Add to Favourites"),
+        types.KeyboardButton("Favourites"),
+        types.KeyboardButton("Delete from Favourites")
     )
 
     return kb
