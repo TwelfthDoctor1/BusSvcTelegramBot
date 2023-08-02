@@ -64,7 +64,7 @@ def option_keyboard(msg: iter, row_size: int = 1):
 
 def get_option_number(text: str, msg: iter):
     for i in range(len(msg)):
-        if text.find(msg[i]) != -1:
+        if text.strip().find(f"[{i + 1}] {msg[i]}".strip()) != -1:
             return i + 1
 
 
@@ -73,6 +73,16 @@ def location_keyboard():
 
     kb.add(
         types.KeyboardButton("Send Location", request_location=True),
+        types.KeyboardButton("Cancel")
+    )
+
+    return kb
+
+
+def cancel_only_keyboard():
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+
+    kb.add(
         types.KeyboardButton("Cancel")
     )
 

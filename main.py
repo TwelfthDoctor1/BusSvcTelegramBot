@@ -3,13 +3,17 @@ import telebot
 from dotenv import load_dotenv
 from pathlib import Path
 from telebot import types
+from threading import Timer
 from TelegramBotFuncs.KeyboardHandling import start_menu_keyboard, destroy_keyboard, location_keyboard, \
-    option_keyboard, get_option_number
+    option_keyboard, get_option_number, cancel_only_keyboard
+from TelegramBotFuncs.NameGetting import get_user_name
 from TransportAPI.APIHandler import TransportAPIHandler
 from TransportAPI.BusStopInfo import store_bus_stop_data, request_bus_stop_code_from_name, get_nearby_bus_stops, \
     return_bus_stop_name_json
 from TransportAPI.BusService import store_bus_svc_data
 from UtilLib.JSONHandler import JSONHandler
+
+# ======================================================================================================================
 
 ENV_PATH = os.path.join(Path(__file__).resolve().parent, "RefKey.env")
 
@@ -23,9 +27,34 @@ ENV_LIST = [API_KEY_LTA]
 
 # API Handling & Data Caching
 api_handler = TransportAPIHandler(API_KEY_LTA)
-store_bus_stop_data(API_KEY_LTA)
-store_bus_svc_data(API_KEY_LTA)
 
+
+# Timed Caching Function
+def cache_bus_stop_svc_data():
+    """
+    Function to run daily to cache data of bus services and stops.
+
+    This ensures that data is always up-to-date.
+    :return:
+    """
+    # Stop timer
+    timer.cancel()
+
+    # Cache data
+    store_bus_stop_data(API_KEY_LTA)
+    store_bus_svc_data(API_KEY_LTA)
+
+    # Restart timer
+    timer.start()
+
+
+# Cache Data Timer
+timer = Timer(1440, cache_bus_stop_svc_data)
+
+# Run Init Caching
+cache_bus_stop_svc_data()
+
+# Bot Class Var
 bot = telebot.TeleBot(API_KEY_TG)
 
 # ======================================================================================================================
@@ -39,6 +68,11 @@ json_mem.formulate_json()
 # Commands
 @bot.message_handler(commands=["start"])
 def bot_svc_start(message: types.Message):
+    """
+    Start command. Use to reset bot if stuck.
+    :param message:
+    :return:
+    """
     msg = "Welcome to the Bus Timings Telegram Bot.\n" \
           "To start, please type /query_timing or /search.\n\n" \
           "Program created by TwelfthDoctor1."
@@ -47,20 +81,35 @@ def bot_svc_start(message: types.Message):
 
 @bot.message_handler(commands=["query_timing"])
 def query_timing(message: types.Message):
+    """
+    Command to query timing of bus stop.
+
+    This section requests for the bus stop.
+    :param message:
+    :return:
+    """
     sent_msg = bot.send_message(
         message.chat.id,
         "Enter either the following to query bus timings:"
         "\n- 5-digit Bus Stop Code"
         "\n- Bus Stop Name and/or Road Name (i.e. Aft Blk 87 @ Zion Road OR Aft Blk 87)",
-        reply_markup=destroy_keyboard()
+        reply_markup=cancel_only_keyboard()
     )
-    bot.register_next_step_handler(sent_msg, filter_explicit_buses)
+    bot.register_next_step_handler(sent_msg, bus_stop_selection_bypass)
 
 
 @bot.message_handler(commands=["filter"])
 def filter_preface(message: types.Message):
-    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
+    """
+    Filter command to filter for buses.
 
+    This section handles the filter command init.
+    :param message:
+    :return:
+    """
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
+
+    # Check if there is no queried bus stop to disallow filtering
     if mem_dict["bus_mem"] == "":
         bot.send_message(
             message.chat.id,
@@ -70,106 +119,173 @@ def filter_preface(message: types.Message):
         )
         return
 
-    return filter_explicit_buses(message, mem_dict["bus_mem"])
+    return bus_stop_selection_bypass(message, mem_dict["bus_mem"])
 
 
-def filter_explicit_buses(message: types.Message, bus_stop_code: str or list = ""):
+def bus_stop_selection_bypass(message: types.Message, bus_stop_code: str or list = ""):
+    """
+    Function to filter a bus stop from a list. (If any) Else, it will be passed through to filtering.
+    :param message:
+    :param bus_stop_code:
+    :return:
+    """
     msg = f"Bus Stops matching {bus_stop_code}\n"
     msg_data = []
+
+    # User cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
+    # Assume bus stop code as message text if empty
+    # Applicable to Query Timing function command
     if bus_stop_code == "":
         bus_stop_code = message.text
 
+    # If bus stop is not an integer and not a list instance (list of bus stops)
     if not bus_stop_code.isdigit() and not isinstance(bus_stop_code, list):
+        # Split from Name @ Road -> [Name, Road]
         bus_stop_info_data = bus_stop_code.split("@")
 
+        # Trim Spacing (if any)
         for i in range(len(bus_stop_info_data)):
             bus_stop_info_data[i] = bus_stop_info_data[i].strip()
 
+        # Get Bus Stop Code or list of codes from Name and/or Road
         if len(bus_stop_info_data) == 1:
+            # If Name is given only, to get bus stop code or list of codes (if more than 1)
             bus_stop_code = request_bus_stop_code_from_name(bus_stop_info_data[0])
         else:
+            # If Name and Road is given, to get bus stop code or list of codes (If more than 1, but unlikely)
             bus_stop_code = request_bus_stop_code_from_name(bus_stop_info_data[0], bus_stop_info_data[1])
 
+    # Proceed to Filtering if Var is a string (no list)
     if isinstance(bus_stop_code, str):
-        inner_filter_proc(message, bus_stop_code)
+        svc_filtering(message, bus_stop_code)
 
+    # If Var is a list - Options
     elif isinstance(bus_stop_code, list):
+        # Generate list of options for buttons
         for i in range(len(bus_stop_code)):
             msg += f"\n{i + 1}. {bus_stop_code[i][1]} @ {bus_stop_code[i][2]} [{bus_stop_code[i][0]}]"
             msg_data.append(f"{bus_stop_code[i][1]} @ {bus_stop_code[i][2]} [{bus_stop_code[i][0]}]")
 
         msg += "\n\nEnter the list number to view the bus timings for that bus stop or /cancel to stop filter: "
 
-        sent_msg = bot.send_message(message.chat.id, msg, reply_markup=option_keyboard(msg_data, 1))
+        # Send message of options
+        sent_msg = bot.send_message(
+            message.chat.id,
+            msg,
+            reply_markup=option_keyboard(msg_data, 1)
+        )
         bot.register_next_step_handler(sent_msg, pre_filter_get_bus_stop, bus_stop_code, msg_data)
 
 
 def pre_filter_get_bus_stop(message: types.Message, bus_stop_code, msg_data):
+    """
+    Function to get bus stop from selection and send it to filtering.
+    :param message:
+    :param bus_stop_code:
+    :param msg_data:
+    :return:
+    """
+    # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
+    # Option - Button
     elif message.text.startswith("[") is True:
         opt_num = get_option_number(message.text, msg_data)
-        return inner_filter_proc(message, bus_stop_code[int(opt_num) - 1][0])
+        return svc_filtering(message, bus_stop_code[int(opt_num) - 1][0])
 
+    # Not an Integer
     elif message.text.isdigit() is False:
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
-        return filter_explicit_buses(message, bus_stop_code)
+        return bus_stop_selection_bypass(message, bus_stop_code)
 
+    # Option out of range
     elif int(message.text) <= 0 or int(message.text) > len(bus_stop_code):
         bot.send_message(message.chat.id, "Option out of range. Please try again.")
-        return filter_explicit_buses(message, bus_stop_code)
+        return bus_stop_selection_bypass(message, bus_stop_code)
 
-    return inner_filter_proc(message, bus_stop_code[int(message.text) - 1][0])
+    # Option - Raw Integer
+    return svc_filtering(message, bus_stop_code[int(message.text) - 1][0])
 
 
-def inner_filter_proc(message: types.Message, bus_stop_code: str = ""):
+def svc_filtering(message: types.Message, bus_stop_code: str = ""):
+    """
+    Function to filter for an explicit group of services from the full list of services in a bus stop.
+    :param message:
+    :param bus_stop_code:
+    :return:
+    """
+    # Request Service List
     svc_list = api_handler.request_bus_stop_svc_list(bus_stop_code)
 
-    bot.send_message(message.chat.id, "Enter the explicit bus services to see only. Otherwise leave 0"
-                     " to see all services. (i.e.: 5, 12e, 46)", reply_markup=destroy_keyboard())
+    # Show message of available services to be filtered
+    bot.send_message(
+        message.chat.id,
+        "Enter the explicit bus services to see only. Otherwise leave 0 to see all services. (i.e.: 5, 12e, 46)",
+        reply_markup=cancel_only_keyboard()
+    )
 
     sent_msg = bot.send_message(message.chat.id, f"Services:\n{svc_list}")
     bot.register_next_step_handler(sent_msg, parse_data, bus_stop_code)
 
 
 def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str = ""):
-    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
+    """
+    Function to parst bus stop and filter to return bus stop timing.
+    :param message:
+    :param bus_stop_info:
+    :param bus_svc_list_str:
+    :return:
+    """
+    # Get data of user based of name/username
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
 
+    # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
+    # If Var is a integer -> Bus Stop Code
     if bus_stop_info.isdigit():
         bus_stop_code = bus_stop_info
 
+    # Else Var is string (fallback code)
     else:
+        # Split from Name @ Road -> [Name, Road]
         bus_stop_info_data = bus_stop_info.split("@")
 
+        # Trim Spacing (if any)
         for i in range(len(bus_stop_info_data)):
             bus_stop_info_data[i] = bus_stop_info_data[i].strip()
 
+        # Get Bus Stop Code or list of codes from Name and/or Road
         if len(bus_stop_info_data) == 1:
+            # If Name is given only, to get bus stop code or list of codes (if more than 1)
             bus_stop_code = request_bus_stop_code_from_name(bus_stop_info_data[0])
         else:
+            # If Name and Road is given, to get bus stop code or list of codes (If more than 1, but unlikely)
             bus_stop_code = request_bus_stop_code_from_name(bus_stop_info_data[0], bus_stop_info_data[1])
 
+    # Get Filter
     if bus_svc_list_str == "":
         bus_svc_list_str = message.text
 
+    # No Filter - 0
     if bus_svc_list_str == "0":
         bus_svc_list = []
         mem_dict["svc_mem"] = []
 
+    # If Var is a list
     elif isinstance(bus_svc_list_str, list):
         bus_svc_list = bus_svc_list_str
         mem_dict["svc_mem"] = bus_svc_list
 
+    # Transform string to list
     else:
         bus_svc_list = bus_svc_list_str.split(",")
 
@@ -178,22 +294,25 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
 
         mem_dict["svc_mem"] = bus_svc_list
 
-    # Formulate Header & Get Arrival Time
-
-    # Custom Bus Stop
+    # Get Arrival Time
     mem_dict["bus_mem"] = bus_stop_code
     returner = api_handler.request_arrival_time(bus_stop_code, bus_svc_list)
 
-    bot.send_message(message.chat.id, returner[0])
+    # Message Header
+    bot.send_message(message.chat.id, returner[0], reply_markup=start_menu_keyboard())
 
+    # Check condition if return only has 1 item (at least 2)
     if len(returner) == 1:
         return
 
+    # Print Services by message
     for i in range(1, len(returner)):
+        # No Services Available
         if isinstance(returner[i], str) and i == 1:
             bot.send_message(message.chat.id, returner[i])
             break
 
+        # Send Service
         bot.send_message(
             message.chat.id,
             f"{returner[i][0]}\n{returner[i][1]}\n\n{returner[i][2]}\n{returner[i][3]}\n{returner[i][4]}\n"
@@ -203,19 +322,25 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
     bot.send_message(
         message.chat.id,
         "List of Commands\n\nTo refresh: /refresh\nTo query: /query_timing\nTo search: /search\nTo filter: /filter"
-        "\nTo clear: /clear",
-        reply_markup=start_menu_keyboard()
+        "\nTo clear: /clear"
     )
 
     # Save data to JSON Mem
-    json_mem.update_specific_json(f"{message.from_user.username}", mem_dict)
+    json_mem.update_specific_json(f"{get_user_name(message)}", mem_dict)
     json_mem.update_json_file()
 
 
 @bot.message_handler(commands=["refresh"])
 def refresh_timings(message: types.Message):
-    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
+    """
+    Command function to refresh timings.
+    :param message:
+    :return:
+    """
+    # Get data from name/username
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
 
+    # Disallow if query memory is empty
     if mem_dict["bus_mem"] == "":
         bot.send_message(
             message.chat.id, "You have not queried for a bus timing. Please use /query_timing or /search instead.",
@@ -223,17 +348,26 @@ def refresh_timings(message: types.Message):
         )
         return
 
+    # Request Timing
     parse_data(message, mem_dict["bus_mem"], mem_dict["svc_mem"])
 
 
 @bot.message_handler(commands=["clear"])
 def clear_mem(message: types.Message):
-    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
+    """
+    Command function to clear bus and service memory.
+    :param message:
+    :return:
+    """
+    # Get data from name/username
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
 
+    # Clear values
     mem_dict["bus_mem"] = ""
     mem_dict["svc_mem"] = []
 
-    json_mem.update_specific_json(f"{message.from_user.username}", mem_dict)
+    # Update config
+    json_mem.update_specific_json(f"{get_user_name(message)}", mem_dict)
     json_mem.update_json_file()
 
     bot.send_message(
@@ -245,6 +379,12 @@ def clear_mem(message: types.Message):
 
 @bot.message_handler(commands=["search"])
 def search_query(message: types.Message):
+    """
+    Command function to search for bus stop based on location.
+    :param message:
+    :return:
+    """
+    # Message with Send Location
     sent_msg = bot.send_message(
         message.chat.id, "Select the \"Send Location\" button to send your location, or use the \"Attachment\" button "
                          "to send a location. To exit, press \"Cancel\".",
@@ -254,21 +394,31 @@ def search_query(message: types.Message):
 
 
 def search_query_proc(message: types.Message):
+    """
+    Function to process location coordinates to list nearby bus stops up to 500 metres in range
+    :param message:
+    :return:
+    """
     msg_data = []
+    # User cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
+    # Get location from message data
     lon = message.location.longitude
     lat = message.location.latitude
 
+    # Get list of nearby stops from coordinates
     nearby_stops = get_nearby_bus_stops(lon, lat)
 
     msg = "Nearby Bus Stops\n"
 
+    # No Nearby Stops
     if len(nearby_stops) == 0:
         msg += f"\nNo nearby Bus Stops."
 
+    # >=1 Stops Nearby
     else:
         for i in range(len(nearby_stops)):
             msg += f"\n{i + 1}. {nearby_stops[i][2]} @ {nearby_stops[i][1]} [{nearby_stops[i][0]}] " \
@@ -285,29 +435,48 @@ def search_query_proc(message: types.Message):
 
 
 def post_search_query(message: types.Message, nearby_stops: list, msg_data):
+    """
+    Function to handle search query option
+    :param message:
+    :param nearby_stops:
+    :param msg_data:
+    :return:
+    """
+    # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
+    # Option - Button
     elif message.text.startswith("[") is True:
         opt_num = get_option_number(message.text, msg_data)
-        return filter_explicit_buses(message, nearby_stops[int(opt_num) - 1][0])
+        return bus_stop_selection_bypass(message, nearby_stops[int(opt_num) - 1][0])
 
+    # Not an Integer
     elif message.text.isdigit() is False:
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
         return search_query(message)
 
+    # Option out of range
     elif int(message.text) <= 0 or int(message.text) > len(nearby_stops):
         bot.send_message(message.chat.id, "Option out of range. Please try again.")
         return search_query(message)
 
-    return filter_explicit_buses(message, nearby_stops[int(message.text) - 1][0])
+    # Option - Raw Integer
+    return bus_stop_selection_bypass(message, nearby_stops[int(message.text) - 1][0])
 
 
 @bot.message_handler(commands=["add_to_favourites"])
 def add_to_favourites(message: types.Message):
-    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
+    """
+    Command Option to add current query into list of favourites
+    :param message:
+    :return:
+    """
+    # Get data from name/username
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
 
+    # Disallow if no queries in memory
     if mem_dict["bus_mem"] == "":
         bot.send_message(
             message.chat.id, "You have not queried for a bus timing. Please use /query_timing or /search instead.",
@@ -315,13 +484,16 @@ def add_to_favourites(message: types.Message):
         )
         return
 
+    # Save to Favourites
     if mem_dict.get("favourites") is not None:
         mem_dict["favourites"].append([mem_dict["bus_mem"], mem_dict["svc_mem"]])
 
+    # Create KV and Save to Favourites
     else:
         mem_dict["favourites"] = [[mem_dict["bus_mem"], mem_dict["svc_mem"]]]
 
-    json_mem.update_specific_json(f"{message.from_user.username}", mem_dict)
+    # Update config
+    json_mem.update_specific_json(f"{get_user_name(message)}", mem_dict)
     json_mem.update_json_file()
 
     bot.send_message(
@@ -333,9 +505,15 @@ def add_to_favourites(message: types.Message):
 
 @bot.message_handler(commands=["favourites"])
 def list_favourites(message: types.Message):
+    """
+    Command option to query timing from a favourite query
+    :param message:
+    :return:
+    """
     msg_data = []
-    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
 
+    # Disallow empty/non existent favourites list
     if mem_dict.get("favourites") is None or mem_dict.get("favourites") == []:
         bot.send_message(
             message.chat.id, "No favourite bus timing queries.",
@@ -345,6 +523,7 @@ def list_favourites(message: types.Message):
 
     msg = "Bus Timing Favourites\n"
 
+    # Generate options
     for i in range(len(mem_dict["favourites"])):
         msg += f"\n{i + 1}. {return_bus_stop_name_json(mem_dict['favourites'][i][0])[0]} | " \
                f"{str(', ').join(mem_dict['favourites'][i][1])}"
@@ -365,30 +544,48 @@ def list_favourites(message: types.Message):
 
 
 def fav_post_proc(message: types.Message, fav_list, msg_data):
+    """
+    Function to handle Favourites Option
+    :param message:
+    :param fav_list:
+    :param msg_data:
+    :return:
+    """
+    # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
+    # Option - Button
     elif message.text.startswith("[") is True:
         opt_num = get_option_number(message.text, msg_data)
         return parse_data(message, fav_list[int(opt_num) - 1][0], fav_list[int(opt_num) - 1][1])
 
+    # Not an Integer
     elif message.text.isdigit() is False:
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
         return list_favourites(message)
 
+    # Option out of range
     elif int(message.text) <= 0 or int(message.text) > len(fav_list):
         bot.send_message(message.chat.id, "Option out of range. Please try again.")
         return list_favourites(message)
 
+    # Option - Raw Integer
     return parse_data(message, fav_list[int(message.text) - 1][0], fav_list[int(message.text) - 1][1])
 
 
 @bot.message_handler(commands=["delete_from_favourites"])
 def delete_favourites_list(message: types.Message):
+    """
+    Command Function to delete selected favourite query
+    :param message:
+    :return:
+    """
     msg_data = []
-    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
 
+    # Disallow empty/non existent favourites list
     if mem_dict.get("favourites") is None or len(mem_dict["favourites"]) == 0:
         bot.send_message(
             message.chat.id, "No favourite bus timing queries.", start_menu_keyboard()
@@ -397,6 +594,7 @@ def delete_favourites_list(message: types.Message):
 
     msg = "Bus Timing Favourites\n"
 
+    # Generate option list
     for i in range(len(mem_dict["favourites"])):
         msg += f"\n{i + 1}. {return_bus_stop_name_json(mem_dict['favourites'][i][0])[0]} | " \
                f"{str(', ').join(mem_dict['favourites'][i][1])}"
@@ -413,31 +611,46 @@ def delete_favourites_list(message: types.Message):
 
 
 def del_fav_proc(message: types.Message, fav_list, msg_data):
+    """
+    Function to handle option and deletion of favourite
+    :param message:
+    :param fav_list:
+    :param msg_data:
+    :return:
+    """
     pos = -1
+    # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
+    # Option - Button
     elif message.text.startswith("[") is True:
         opt_num = get_option_number(message.text, msg_data)
         pos = int(opt_num) - 1
 
+    # Not an integer
     elif message.text.isdigit() is False:
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
         return delete_favourites_list(message)
 
+    # Option out of range
     elif int(message.text) <= 0 or int(message.text) > len(fav_list):
         bot.send_message(message.chat.id, "Option out of range. Please try again.")
         return delete_favourites_list(message)
 
-    mem_dict = json_mem.return_specific_json(f"{message.from_user.username}")
-
+    # Option - Raw Integer
     if pos <= -1:
         pos = int(message.text) - 1
 
+    # Get data from name/username
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
+
+    # Remove specified favourite from position
     mem_dict["favourites"].pop(pos)
 
-    json_mem.update_specific_json(f"{message.from_user.username}", mem_dict)
+    # Update config
+    json_mem.update_specific_json(f"{get_user_name(message)}", mem_dict)
     json_mem.update_json_file()
 
     bot.send_message(
@@ -447,14 +660,13 @@ def del_fav_proc(message: types.Message, fav_list, msg_data):
     )
 
 
-@bot.message_handler(commands=["shutdown"])
-def shutdown_bot(message: types.Message):
-    if message.from_user.username == "TwelfthDoctor1":
-        return bot.stop_bot()
-
-
 @bot.message_handler(func=lambda message: True)
 def kb_text_redirect(message: types.Message):
+    """
+    Detection Function to handle Option texts and redirect them to various command functions
+    :param message:
+    :return:
+    """
     if message.text == "Query Timing":
         return query_timing(message)
     elif message.text == "Search":

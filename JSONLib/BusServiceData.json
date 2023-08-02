@@ -383,7 +383,7 @@
             "Category": "TRUNK",
             "DestinationCode": "09191",
             "Direction": 1,
-            "LoopDesc": "",
+            "LoopDesc": "Choa Chu Kang Rd - Track 14",
             "Operator": "GAS",
             "OriginCode": "95129",
             "PM_Offpeak_Freq": "-",
@@ -391,16 +391,16 @@
             "ServiceNo": "36A"
         },
         {
-            "AM_Offpeak_Freq": "8-288",
-            "AM_Peak_Freq": "8-08",
+            "AM_Offpeak_Freq": "08-288",
+            "AM_Peak_Freq": "08-08",
             "Category": "TRUNK",
             "DestinationCode": "93199",
             "Direction": 1,
-            "LoopDesc": "",
+            "LoopDesc": "Choa Chu Kang Rd - Track 14",
             "Operator": "GAS",
             "OriginCode": "93049",
             "PM_Offpeak_Freq": "-",
-            "PM_Peak_Freq": "8-135",
+            "PM_Peak_Freq": "08-135",
             "ServiceNo": "36B"
         },
         {
@@ -1340,7 +1340,7 @@
             "ServiceNo": "117M"
         },
         {
-            "AM_Offpeak_Freq": "12-14",
+            "AM_Offpeak_Freq": "11-14",
             "AM_Peak_Freq": "11-12",
             "Category": "TRUNK",
             "DestinationCode": "10499",
@@ -1595,7 +1595,7 @@
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "10009",
-            "PM_Offpeak_Freq": "12-16",
+            "PM_Offpeak_Freq": "11-16",
             "PM_Peak_Freq": "09-16",
             "ServiceNo": "131"
         },
@@ -1613,8 +1613,8 @@
             "ServiceNo": "131A"
         },
         {
-            "AM_Offpeak_Freq": "10-19",
-            "AM_Peak_Freq": "10-16",
+            "AM_Offpeak_Freq": "12-19",
+            "AM_Peak_Freq": "11-16",
             "Category": "TRUNK",
             "DestinationCode": "10009",
             "Direction": 1,
@@ -1622,11 +1622,11 @@
             "Operator": "SBST",
             "OriginCode": "64009",
             "PM_Offpeak_Freq": "14-19",
-            "PM_Peak_Freq": "10-19",
+            "PM_Peak_Freq": "14-18",
             "ServiceNo": "132"
         },
         {
-            "AM_Offpeak_Freq": "10-19",
+            "AM_Offpeak_Freq": "11-19",
             "AM_Peak_Freq": "13-14",
             "Category": "TRUNK",
             "DestinationCode": "64009",
@@ -1634,21 +1634,21 @@
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "10009",
-            "PM_Offpeak_Freq": "14-16",
-            "PM_Peak_Freq": "12-15",
+            "PM_Offpeak_Freq": "15-16",
+            "PM_Peak_Freq": "14-15",
             "ServiceNo": "132"
         },
         {
-            "AM_Offpeak_Freq": "08-13",
-            "AM_Peak_Freq": "08-09",
+            "AM_Offpeak_Freq": "09-10",
+            "AM_Peak_Freq": "08-10",
             "Category": "TRUNK",
             "DestinationCode": "03239",
             "Direction": 1,
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "54009",
-            "PM_Offpeak_Freq": "12-13",
-            "PM_Peak_Freq": "08-12",
+            "PM_Offpeak_Freq": "10-12",
+            "PM_Peak_Freq": "10-11",
             "ServiceNo": "133"
         },
         {
@@ -1661,7 +1661,7 @@
             "Operator": "SBST",
             "OriginCode": "03239",
             "PM_Offpeak_Freq": "10-13",
-            "PM_Peak_Freq": "09-10",
+            "PM_Peak_Freq": "08-10",
             "ServiceNo": "133"
         },
         {
@@ -2978,7 +2978,7 @@
             "ServiceNo": "195"
         },
         {
-            "AM_Offpeak_Freq": "40-40",
+            "AM_Offpeak_Freq": "11-11",
             "AM_Peak_Freq": "-",
             "Category": "TRUNK",
             "DestinationCode": "10169",
@@ -4772,21 +4772,21 @@
             "ServiceNo": "51A"
         },
         {
-            "AM_Offpeak_Freq": "10-17",
-            "AM_Peak_Freq": "10-13",
+            "AM_Offpeak_Freq": "12-15",
+            "AM_Peak_Freq": "11-13",
             "Category": "TRUNK",
             "DestinationCode": "28009",
             "Direction": 1,
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "53009",
-            "PM_Offpeak_Freq": "13-15",
-            "PM_Peak_Freq": "13-13",
+            "PM_Offpeak_Freq": "13-16",
+            "PM_Peak_Freq": "11-15",
             "ServiceNo": "52"
         },
         {
-            "AM_Offpeak_Freq": "10-17",
-            "AM_Peak_Freq": "12-17",
+            "AM_Offpeak_Freq": "09-17",
+            "AM_Peak_Freq": "11-17",
             "Category": "TRUNK",
             "DestinationCode": "53009",
             "Direction": 2,
@@ -4902,7 +4902,7 @@
             "ServiceNo": "55B"
         },
         {
-            "AM_Offpeak_Freq": "10-17",
+            "AM_Offpeak_Freq": "09-17",
             "AM_Peak_Freq": "10-11",
             "Category": "TRUNK",
             "DestinationCode": "02099",
@@ -4910,8 +4910,8 @@
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "53009",
-            "PM_Offpeak_Freq": "13-25",
-            "PM_Peak_Freq": "13-14",
+            "PM_Offpeak_Freq": "17-25",
+            "PM_Peak_Freq": "12-14",
             "ServiceNo": "56"
         },
         {
@@ -4923,8 +4923,8 @@
             "LoopDesc": "",
             "Operator": "SBST",
             "OriginCode": "02099",
-            "PM_Offpeak_Freq": "14-24",
-            "PM_Peak_Freq": "12-16",
+            "PM_Offpeak_Freq": "15-24",
+            "PM_Peak_Freq": "12-15",
             "ServiceNo": "56"
         },
         {
@@ -6839,29 +6839,29 @@
             "ServiceNo": "67"
         },
         {
-            "AM_Offpeak_Freq": "08-14",
-            "AM_Peak_Freq": "04-09",
+            "AM_Offpeak_Freq": "10-16",
+            "AM_Peak_Freq": "08-11",
             "Category": "TRUNK",
             "DestinationCode": "02099",
             "Direction": 1,
             "LoopDesc": "",
             "Operator": "SMRT",
             "OriginCode": "44989",
-            "PM_Offpeak_Freq": "13-16",
-            "PM_Peak_Freq": "11-14",
+            "PM_Offpeak_Freq": "14-16",
+            "PM_Peak_Freq": "14-15",
             "ServiceNo": "75"
         },
         {
-            "AM_Offpeak_Freq": "07-13",
-            "AM_Peak_Freq": "09-12",
+            "AM_Offpeak_Freq": "10-15",
+            "AM_Peak_Freq": "11-15",
             "Category": "TRUNK",
             "DestinationCode": "44989",
             "Direction": 2,
             "LoopDesc": "",
             "Operator": "SMRT",
             "OriginCode": "02099",
-            "PM_Offpeak_Freq": "13-15",
-            "PM_Peak_Freq": "08-15",
+            "PM_Offpeak_Freq": "11-16",
+            "PM_Peak_Freq": "08-11",
             "ServiceNo": "75"
         },
         {
@@ -7242,29 +7242,29 @@
             "ServiceNo": "951E"
         },
         {
-            "AM_Offpeak_Freq": "08-12",
-            "AM_Peak_Freq": "08-09",
+            "AM_Offpeak_Freq": "09-12",
+            "AM_Peak_Freq": "07-09",
             "Category": "TRUNK",
             "DestinationCode": "02099",
             "Direction": 1,
             "LoopDesc": "",
             "Operator": "SMRT",
             "OriginCode": "46009",
-            "PM_Offpeak_Freq": "10-11",
-            "PM_Peak_Freq": "10-12",
+            "PM_Offpeak_Freq": "10-15",
+            "PM_Peak_Freq": "09-10",
             "ServiceNo": "960"
         },
         {
-            "AM_Offpeak_Freq": "08-11",
-            "AM_Peak_Freq": "10-11",
+            "AM_Offpeak_Freq": "08-12",
+            "AM_Peak_Freq": "09-10",
             "Category": "TRUNK",
             "DestinationCode": "46009",
             "Direction": 2,
             "LoopDesc": "",
             "Operator": "SMRT",
             "OriginCode": "02099",
-            "PM_Offpeak_Freq": "09-11",
-            "PM_Peak_Freq": "08-09",
+            "PM_Offpeak_Freq": "08-14",
+            "PM_Peak_Freq": "09-10",
             "ServiceNo": "960"
         },
         {
@@ -7632,29 +7632,29 @@
             "ServiceNo": "983A"
         },
         {
-            "AM_Offpeak_Freq": "09-11",
-            "AM_Peak_Freq": "08-10",
+            "AM_Offpeak_Freq": "10-15",
+            "AM_Peak_Freq": "08-11",
             "Category": "TRUNK",
             "DestinationCode": "80009",
             "Direction": 1,
             "LoopDesc": "",
             "Operator": "SMRT",
             "OriginCode": "44009",
-            "PM_Offpeak_Freq": "11-12",
-            "PM_Peak_Freq": "11",
+            "PM_Offpeak_Freq": "12-14",
+            "PM_Peak_Freq": "12-13",
             "ServiceNo": "985"
         },
         {
             "AM_Offpeak_Freq": "09-13",
-            "AM_Peak_Freq": "09-10",
+            "AM_Peak_Freq": "09-11",
             "Category": "TRUNK",
             "DestinationCode": "44009",
             "Direction": 2,
             "LoopDesc": "",
             "Operator": "SMRT",
             "OriginCode": "80009",
-            "PM_Offpeak_Freq": "11-12",
-            "PM_Peak_Freq": "10",
+            "PM_Offpeak_Freq": "11-13",
+            "PM_Peak_Freq": "10-11",
             "ServiceNo": "985"
         },
         {
@@ -7723,7 +7723,7 @@
             "ServiceNo": "991C"
         },
         {
-            "AM_Offpeak_Freq": "08-12",
+            "AM_Offpeak_Freq": "07-13",
             "AM_Peak_Freq": "08-09",
             "Category": "TRUNK",
             "DestinationCode": "03239",
@@ -7827,8 +7827,8 @@
             "ServiceNo": "167"
         },
         {
-            "AM_Offpeak_Freq": "04-09",
-            "AM_Peak_Freq": "05-09",
+            "AM_Offpeak_Freq": "05-09",
+            "AM_Peak_Freq": "06-09",
             "Category": "TRUNK",
             "DestinationCode": "54009",
             "Direction": 1,
@@ -7836,11 +7836,11 @@
             "Operator": "TTS",
             "OriginCode": "46009",
             "PM_Offpeak_Freq": "09-12",
-            "PM_Peak_Freq": "07-11",
+            "PM_Peak_Freq": "06-12",
             "ServiceNo": "169"
         },
         {
-            "AM_Offpeak_Freq": "06-08",
+            "AM_Offpeak_Freq": "06-09",
             "AM_Peak_Freq": "06-09",
             "Category": "TRUNK",
             "DestinationCode": "46009",
@@ -7848,7 +7848,7 @@
             "LoopDesc": "",
             "Operator": "TTS",
             "OriginCode": "54009",
-            "PM_Offpeak_Freq": "08-12",
+            "PM_Offpeak_Freq": "09-12",
             "PM_Peak_Freq": "06-08",
             "ServiceNo": "169"
         },
@@ -8256,7 +8256,7 @@
             "ServiceNo": "670"
         },
         {
-            "AM_Offpeak_Freq": "14-15",
+            "AM_Offpeak_Freq": "14-16",
             "AM_Peak_Freq": "12-13",
             "Category": "TRUNK",
             "DestinationCode": "02099",
@@ -8270,14 +8270,14 @@
         },
         {
             "AM_Offpeak_Freq": "13-15",
-            "AM_Peak_Freq": "14-14",
+            "AM_Peak_Freq": "14-15",
             "Category": "TRUNK",
             "DestinationCode": "43009",
             "Direction": 2,
             "LoopDesc": "",
             "Operator": "TTS",
             "OriginCode": "02099",
-            "PM_Offpeak_Freq": "13-15",
+            "PM_Offpeak_Freq": "12-15",
             "PM_Peak_Freq": "14-15",
             "ServiceNo": "77"
         },
@@ -8659,8 +8659,8 @@
             "ServiceNo": "859T"
         },
         {
-            "AM_Offpeak_Freq": "09-12",
-            "AM_Peak_Freq": "10-12",
+            "AM_Offpeak_Freq": "11-15",
+            "AM_Peak_Freq": "10-13",
             "Category": "TRUNK",
             "DestinationCode": "58009",
             "Direction": 1,
@@ -8668,7 +8668,7 @@
             "Operator": "TTS",
             "OriginCode": "58009",
             "PM_Offpeak_Freq": "10-12",
-            "PM_Peak_Freq": "09-11",
+            "PM_Peak_Freq": "10-12",
             "ServiceNo": "882"
         },
         {
@@ -8992,8 +8992,8 @@
             "LoopDesc": "",
             "Operator": "TTS",
             "OriginCode": "02099",
-            "PM_Offpeak_Freq": "13-25",
-            "PM_Peak_Freq": "10-14",
+            "PM_Offpeak_Freq": "15-25",
+            "PM_Peak_Freq": "11-14",
             "ServiceNo": "97"
         },
         {
