@@ -1,9 +1,9 @@
 import os
 import telebot
+import time
 from dotenv import load_dotenv
 from pathlib import Path
 from telebot import types
-from threading import Timer
 from TelegramBotFuncs.KeyboardHandling import start_menu_keyboard, destroy_keyboard, location_keyboard, \
     option_keyboard, get_option_number, cancel_only_keyboard
 from TelegramBotFuncs.NameGetting import get_user_name
@@ -12,8 +12,12 @@ from TransportAPI.BusStopInfo import store_bus_stop_data, request_bus_stop_code_
     return_bus_stop_name_json
 from TransportAPI.BusService import store_bus_svc_data
 from UtilLib.JSONHandler import JSONHandler
+from UtilLib.Logging import LoggerClass
 
 # ======================================================================================================================
+
+# Logger
+logger = LoggerClass("Main Module", "TwelfthDoctor1")
 
 ENV_PATH = os.path.join(Path(__file__).resolve().parent, "RefKey.env")
 
@@ -37,19 +41,12 @@ def cache_bus_stop_svc_data():
     This ensures that data is always up-to-date.
     :return:
     """
-    # Stop timer
-    timer.cancel()
-
     # Cache data
     store_bus_stop_data(API_KEY_LTA)
     store_bus_svc_data(API_KEY_LTA)
 
-    # Restart timer
-    timer.start()
+    logger.info("Updated data for Bus stop and Services data.")
 
-
-# Cache Data Timer
-timer = Timer(1440, cache_bus_stop_svc_data)
 
 # Run Init Caching
 cache_bus_stop_svc_data()
@@ -658,6 +655,22 @@ def del_fav_proc(message: types.Message, fav_list, msg_data):
         "The selected bus timing has been deleted from favourites.",
         reply_markup=start_menu_keyboard()
     )
+
+
+@bot.message_handler(commands=["refresh_cache"])
+def refresh_cache(message: types.Message):
+    """
+    Command Function to refresh cache
+    :param message:
+    :return:
+    """
+    if get_user_name(message) != "TwelfthDoctor1":
+        bot.send_message(message.chat.id, "Ineligible perms.")
+        return
+
+    cache_bus_stop_svc_data()
+
+    bot.send_message(message.chat.id, "Updated Bus Stop and Service data.")
 
 
 @bot.message_handler(func=lambda message: True)
