@@ -1,10 +1,10 @@
 import os
 import telebot
-import time
 from dotenv import load_dotenv
 from pathlib import Path
 from telebot import types
-from TelegramBotFuncs.KeyboardHandling import start_menu_keyboard, destroy_keyboard, location_keyboard, \
+from SettingsData import SETTINGS_DATA
+from TelegramBotFuncs.KeyboardHandling import start_menu_keyboard, location_keyboard, \
     option_keyboard, get_option_number, cancel_only_keyboard
 from TelegramBotFuncs.NameGetting import get_user_name
 from TransportAPI.APIHandler import TransportAPIHandler
@@ -15,7 +15,6 @@ from UtilLib.JSONHandler import JSONHandler
 from UtilLib.Logging import LoggerClass
 
 # ======================================================================================================================
-
 # Logger
 logger = LoggerClass("Main Module", "TwelfthDoctor1")
 
@@ -242,6 +241,27 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
     # Get data of user based of name/username
     mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
 
+    # Init check settings data
+    # If Settings Data does not exist
+    if mem_dict.get("settings") is None:
+        mem_dict["settings"] = SETTINGS_DATA
+
+    # Add new KVs
+    else:
+        for key_verify, value_verify in SETTINGS_DATA.items():
+            verify_check = False
+            for k, v in mem_dict["settings"].items():
+                # If KV exists
+                if k == key_verify:
+                    verify_check = True
+                    continue
+
+            # Insert new KV if non existent
+            if verify_check is False:
+                mem_dict["settings"][key_verify] = value_verify
+
+    hide_cmd_list = mem_dict["settings"]["hide_cmd_list"]["data"]
+
     # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
@@ -293,7 +313,7 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
 
     # Get Arrival Time
     mem_dict["bus_mem"] = bus_stop_code
-    returner = api_handler.request_arrival_time(bus_stop_code, bus_svc_list)
+    returner = api_handler.request_arrival_time(bus_stop_code, bus_svc_list, f"{get_user_name(message)}")
 
     # Message Header
     bot.send_message(message.chat.id, returner[0], reply_markup=start_menu_keyboard())
@@ -316,11 +336,12 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
             f"\n{returner[i][5]}"
         )
 
-    bot.send_message(
-        message.chat.id,
-        "List of Commands\n\nTo refresh: /refresh\nTo query: /query_timing\nTo search: /search\nTo filter: /filter"
-        "\nTo clear: /clear"
-    )
+    if hide_cmd_list is False:
+        bot.send_message(
+            message.chat.id,
+            "List of Commands\n\nTo refresh: /refresh\nTo query: /query_timing\nTo search: /search\nTo filter: /filter"
+            "\nTo clear: /clear"
+        )
 
     # Save data to JSON Mem
     json_mem.update_specific_json(f"{get_user_name(message)}", mem_dict)
@@ -673,6 +694,104 @@ def refresh_cache(message: types.Message):
     bot.send_message(message.chat.id, "Updated Bus Stop and Service data.")
 
 
+@bot.message_handler(commands=["settings"])
+def settings_init(message: types.Message):
+    msg_data = []
+    # Get data from name/username
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
+
+    # Init Settings Data
+    if mem_dict.get("settings") is None:
+        mem_dict["settings"] = SETTINGS_DATA
+
+    # Add new KVs
+    else:
+        for key_verify, value_verify in SETTINGS_DATA.items():
+            verify_check = False
+            for k, v in mem_dict["settings"].items():
+                # If KV exists
+                if k == key_verify:
+                    verify_check = True
+                    continue
+
+            # Insert new KV if non existent
+            if verify_check is False:
+                mem_dict["settings"][key_verify] = value_verify
+
+    # Update config
+    json_mem.update_specific_json(f"{get_user_name(message)}", mem_dict)
+    json_mem.update_json_file()
+
+    msg = "Settings List\n"
+
+    # Generate options
+    for k, v in mem_dict["settings"].items():
+        msg += f"\n{v['name']} -> {v['data']}"
+
+        msg_data.append(v['name'])
+
+    msg += f"\n\nEnter the setting name to change the value of that setting: "
+
+    sent_msg = bot.send_message(
+        message.chat.id,
+        msg,
+        reply_markup=option_keyboard(msg_data, 1)
+    )
+
+    bot.register_next_step_handler(sent_msg, proc_handle_setting, msg_data)
+
+
+def proc_handle_setting(message: types.Message, msg_data):
+    key = ""
+    # User Cancel
+    if message.text == "/cancel" or message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
+        return
+
+    # Option - Button
+    elif message.text.startswith("[") is True:
+        opt_num = get_option_number(message.text, msg_data)
+        key_text = msg_data[int(opt_num) - 1]
+
+    # Not string
+    elif isinstance(message.text, str) is False:
+        bot.send_message(message.chat.id, "Unknown option. Please try again.")
+        return delete_favourites_list(message)
+
+    # Option - Raw Text
+    else:
+        key_text = message.text
+
+    # Get data from name/username
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
+
+    # Get Key Name
+    for k, v in mem_dict["settings"].items():
+        if v["name"] == key_text:
+            key = k
+            break
+
+    if key == "":
+        bot.send_message(
+            message.chat.id,
+            "Unknown key, please enter a correct key.",
+            reply_markup=start_menu_keyboard()
+        )
+
+    # Update Setting Value
+    mem_dict["settings"][key]["data"] = not mem_dict["settings"][key]["data"]
+
+    # Update config
+    json_mem.update_specific_json(f"{get_user_name(message)}", mem_dict)
+    json_mem.update_json_file()
+
+    bot.send_message(
+        message.chat.id,
+        f"The setting [{key}] has been changed.",
+        reply_markup=start_menu_keyboard()
+    )
+
+
 @bot.message_handler(func=lambda message: True)
 def kb_text_redirect(message: types.Message):
     """
@@ -696,6 +815,8 @@ def kb_text_redirect(message: types.Message):
         return list_favourites(message)
     elif message.text == "Delete from Favourites":
         return delete_favourites_list(message)
+    elif message.text == "Settings":
+        return settings_init(message)
 
 
 # ======================================================================================================================

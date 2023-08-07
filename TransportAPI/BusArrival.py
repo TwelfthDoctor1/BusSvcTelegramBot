@@ -38,7 +38,8 @@ def calculate_est_duration(dur_1: int, dur_2: int, dur_3: int):
 
 
 def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: list,
-                            fallback_header: bool = False, debug: bool = False, return_svc_list=False):
+                            fallback_header: bool = False, debug: bool = False, return_svc_list=False,
+                            no_exact_time=False):
     """
     Core Function to get and return the Timings of Services for a Bus Stop.
     For a specific number in Services, define the Service Number.
@@ -50,6 +51,7 @@ def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: li
     :param fallback_header: A boolean state that determines whether the fallback header should be used. (Shows the code)
     :param debug: A boolean state to show debug text
     :param return_svc_list: Returns the Bus Services for the bus stop, WILL NOT RETURN TIMING!
+    :param no_exact_time: Boolean parameter to disallow the showing of exact timing for arrivals
     :return: A Tuple of 18 values (exc. !):
              [0] -> Service Number,
              [1] -> Service Operator,
@@ -401,8 +403,8 @@ def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: li
                 )
 
                 print(
-                    f"Estimated Duration: {est_dur} mins" if one_visit is True else
-                    f"Estimated Duration (Visit 1): {est_dur_1} mins\nEstimated Duration (Visit 2): {est_dur_2} mins"
+                    f"Estimated Duration: {est_dur} min" if one_visit is True else
+                    f"Estimated Duration (Visit 1): {est_dur_1} min\nEstimated Duration (Visit 2): {est_dur_2} min"
                 )
 
                 print(
@@ -414,9 +416,12 @@ def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: li
                 (
                     bus_svc['ServiceNo'],  # [0]
                     bus_svc['Operator'],  # [1]
-                    f"1.  {next_bus} @ {nb_time[0]}:{nb_time[1]}:{nb_time[2]}",  # [2]
-                    f"2.  {next_bus2} @ {nb_time2[0]}:{nb_time2[1]}:{nb_time2[2]}",  # [3]
-                    f"3.  {next_bus3} @ {nb_time3[0]}:{nb_time3[1]}:{nb_time3[2]}",  # [4]
+                    f"1.  {next_bus} @ {nb_time[0]}:{nb_time[1]}:{nb_time[2]}" if no_exact_time is False  # [2]
+                    else f"1.  {next_bus}",  # [2]
+                    f"2.  {next_bus2} @ {nb_time2[0]}:{nb_time2[1]}:{nb_time2[2]}" if no_exact_time is False  # [3]
+                    else f"1.  {next_bus2}",  # [3]
+                    f"3.  {next_bus3} @ {nb_time3[0]}:{nb_time3[1]}:{nb_time3[2]}" if no_exact_time is False  # [4]
+                    else f"1.  {next_bus3}",  # [4]
                     interpret_seating(bus_svc['NextBus']['Load']),  # [5]
                     interpret_seating(bus_svc['NextBus2']['Load']),  # [6]
                     interpret_seating(bus_svc['NextBus3']['Load']),  # [7]

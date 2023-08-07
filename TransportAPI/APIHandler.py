@@ -1,17 +1,48 @@
+from SettingsData import SETTINGS_DATA
 from TransportAPI.BusStopInfo import request_bus_stop_name_lta, return_bus_stop_name_json
 from TransportAPI.BusArrival import request_bus_stop_timing
 from TransportAPI.BusService import return_bus_svc_json
+from UtilLib.JSONHandler import JSONHandler
 
 
 class TransportAPIHandler:
     def __init__(self, api_key: str):
         self.api_key = api_key
+        self.json_mem = JSONHandler("MemoryData")
 
-    def request_arrival_time(self, bus_stop_code: str, explicit_buses: list):
+    def request_arrival_time(self, bus_stop_code: str, explicit_buses: list, name: str):
+        # JSON Settings Values Formulation
+        self.json_mem.formulate_json()
+        mem_dict = self.json_mem.return_specific_json(name)
+
+        # If Settings Data does not exist
+        if mem_dict.get("settings") is None:
+            mem_dict["settings"] = SETTINGS_DATA
+
+        # Add new KVs
+        else:
+            for key_verify, value_verify in SETTINGS_DATA.items():
+                verify_check = False
+                for k, v in mem_dict["settings"].items():
+                    # If KV exists
+                    if k == key_verify:
+                        verify_check = True
+                        continue
+
+                # Insert new KV if non existent
+                if verify_check is False:
+                    mem_dict["settings"][key_verify] = value_verify
+
+        # Get Required KVs
+        consolidated_timing = mem_dict["settings"]["timing_consolidated"]["data"]
+
+        # Get Bus Stop Data
         curr_stop_returner = request_bus_stop_name_lta(bus_stop_code, self.api_key)
-        arrival_returner = request_bus_stop_timing(bus_stop_code, self.api_key, explicit_buses)
+        arrival_returner = request_bus_stop_timing(bus_stop_code, self.api_key, explicit_buses,
+                                                   no_exact_time=consolidated_timing)
         main_returner = []
 
+        # Header Formulation
         if curr_stop_returner[2] is True:
             print(
                 f"=======================================================================================\n"
@@ -27,6 +58,7 @@ class TransportAPIHandler:
             )
             main_returner.append(f"Bus Stop No: {bus_stop_code} Services")
 
+        # No Bus Svc Formulation
         if len(arrival_returner) == 0:
             print(
                 f"There is no bus services available.\n"
@@ -35,6 +67,7 @@ class TransportAPIHandler:
             main_returner.append(f"There is no bus services available.")
             return main_returner
 
+        # Bus Svc Formulation
         for arrival_data in arrival_returner:
             svc_info_returner = return_bus_svc_json(arrival_data[0], 1)
 
@@ -73,18 +106,33 @@ class TransportAPIHandler:
                 f"======================================================================================="
             )
 
-            main_returner.append(
-                [
-                    f"Service [{arrival_data[0]}] | {arrival_data[1]}",
-                    f"{svc_info}",
-                    f"{arrival_data[2]} | {arrival_data[5]} | {arrival_data[8]} | Visit: {arrival_data[11]}",
-                    f"{arrival_data[3]} | {arrival_data[6]} | {arrival_data[9]} | Visit: {arrival_data[12]}",
-                    f"{arrival_data[4]} | {arrival_data[7]} | {arrival_data[10]} | Visit: {arrival_data[13]}",
-                    f"Estimated Duration: {arrival_data[14]} min" if arrival_data[17] is True else
-                    f"Estimated Duration (Visit 1): {arrival_data[15]} min\n"
-                    f"Estimated Duration (Visit 2): {arrival_data[16]} min"
-                ]
-            )
+            if consolidated_timing is False:
+                main_returner.append(
+                    [
+                        f"Service [{arrival_data[0]}] | {arrival_data[1]}",
+                        f"{svc_info}",
+                        f"{arrival_data[2]} | {arrival_data[5]} | {arrival_data[8]} | Visit: {arrival_data[11]}",
+                        f"{arrival_data[3]} | {arrival_data[6]} | {arrival_data[9]} | Visit: {arrival_data[12]}",
+                        f"{arrival_data[4]} | {arrival_data[7]} | {arrival_data[10]} | Visit: {arrival_data[13]}",
+                        f"Estimated Duration: {arrival_data[14]} min" if arrival_data[17] is True else
+                        f"Estimated Duration (Visit 1): {arrival_data[15]} min\n"
+                        f"Estimated Duration (Visit 2): {arrival_data[16]} min"
+                    ]
+                )
+            else:
+                main_returner.append(
+                    [
+                        f"Service [{arrival_data[0]}] | {arrival_data[1]}",
+                        f"{svc_info}",
+                        f"{arrival_data[2]} | Visit: {arrival_data[11]}",
+                        f"{arrival_data[3]} | Visit: {arrival_data[12]}",
+                        f"{arrival_data[4]} | Visit: {arrival_data[13]}",
+                        f"Est. Duration: {arrival_data[14]} min" if arrival_data[17] is True else
+                        f"Est. Duration (Visit 1): {arrival_data[15]} min\n"
+                        f"Est. Duration (Visit 2): {arrival_data[16]} min"
+                    ]
+                )
+
         return main_returner
 
     def request_bus_stop_svc_list(self, bus_stop_code: str):

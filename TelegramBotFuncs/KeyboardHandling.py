@@ -13,7 +13,8 @@ def start_menu_keyboard():
         types.KeyboardButton("Clear"),
         types.KeyboardButton("Add to Favourites"),
         types.KeyboardButton("Favourites"),
-        types.KeyboardButton("Delete from Favourites")
+        types.KeyboardButton("Delete from Favourites"),
+        types.KeyboardButton("Settings")
     )
 
     return kb
@@ -65,6 +66,7 @@ def option_keyboard(msg: iter, row_size: int = 1):
 def get_option_number(text: str, msg: iter):
     for i in range(len(msg)):
         if text.strip().find(f"[{i + 1}] {msg[i]}".strip()) != -1:
+            print(f"{text} | [{i + 1}] {msg[i]}")
             return i + 1
 
 
