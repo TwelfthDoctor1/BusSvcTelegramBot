@@ -46,3 +46,34 @@ def end_split(value: str, check: []):
     for check_val in check:
         if value.endswith(check_val):
             return value.split(check_val)
+
+
+def to_pascal_case(string: str, sep: str or None = None):
+    str_list = string.split(sep)
+
+    for i in range(len(str_list)):
+        str_list[i] = str_list[i].capitalize()
+
+    if sep is None:
+        returner = " ".join(str_list)
+    else:
+        returner = sep.join(str_list)
+
+    return returner
+
+
+def to_camel_case(string: str, sep: str or None = None):
+    str_list = string.split(sep)
+
+    for i in range(len(str_list)):
+        if i == 0:
+            continue
+
+        str_list[i] = str_list[i].capitalize()
+
+    if sep is None:
+        returner = " ".join(str_list)
+    else:
+        returner = sep.join(str_list)
+
+    return returner

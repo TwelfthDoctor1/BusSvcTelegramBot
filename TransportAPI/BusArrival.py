@@ -39,7 +39,7 @@ def calculate_est_duration(dur_1: int, dur_2: int, dur_3: int):
 
 def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: list,
                             fallback_header: bool = False, debug: bool = False, return_svc_list=False,
-                            no_exact_time=False):
+                            no_exact_time=False, short_forms=False):
     """
     Core Function to get and return the Timings of Services for a Bus Stop.
     For a specific number in Services, define the Service Number.
@@ -52,6 +52,7 @@ def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: li
     :param debug: A boolean state to show debug text
     :param return_svc_list: Returns the Bus Services for the bus stop, WILL NOT RETURN TIMING!
     :param no_exact_time: Boolean parameter to disallow the showing of exact timing for arrivals
+    :param short_forms: Show short forms of certain texts
     :return: A Tuple of 18 values (exc. !):
              [0] -> Service Number,
              [1] -> Service Operator,
@@ -416,18 +417,24 @@ def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: li
                 (
                     bus_svc['ServiceNo'],  # [0]
                     bus_svc['Operator'],  # [1]
-                    f"1.  {next_bus} @ {nb_time[0]}:{nb_time[1]}:{nb_time[2]}" if no_exact_time is False  # [2]
-                    else f"1.  {next_bus}",  # [2]
-                    f"2.  {next_bus2} @ {nb_time2[0]}:{nb_time2[1]}:{nb_time2[2]}" if no_exact_time is False  # [3]
-                    else f"1.  {next_bus2}",  # [3]
-                    f"3.  {next_bus3} @ {nb_time3[0]}:{nb_time3[1]}:{nb_time3[2]}" if no_exact_time is False  # [4]
-                    else f"1.  {next_bus3}",  # [4]
-                    interpret_seating(bus_svc['NextBus']['Load']),  # [5]
-                    interpret_seating(bus_svc['NextBus2']['Load']),  # [6]
-                    interpret_seating(bus_svc['NextBus3']['Load']),  # [7]
-                    interpret_type(bus_svc['NextBus']['Type']),  # [8]
-                    interpret_type(bus_svc['NextBus2']['Type']),  # [9]
-                    interpret_type(bus_svc['NextBus3']['Type']),  # [10]
+                    f"{next_bus} @ {nb_time[0]}:{nb_time[1]}:{nb_time[2]}" if no_exact_time is False  # [2]
+                    else f"{next_bus}",  # [2]
+                    f"{next_bus2} @ {nb_time2[0]}:{nb_time2[1]}:{nb_time2[2]}" if no_exact_time is False  # [3]
+                    else f"{next_bus2}",  # [3]
+                    f"{next_bus3} @ {nb_time3[0]}:{nb_time3[1]}:{nb_time3[2]}" if no_exact_time is False  # [4]
+                    else f"{next_bus3}",  # [4]
+                    interpret_seating(bus_svc['NextBus']['Load']) if short_forms is False else  # [5]
+                    bus_svc['NextBus']['Load'],  # [5]
+                    interpret_seating(bus_svc['NextBus2']['Load']) if short_forms is False else  # [6]
+                    bus_svc['NextBus2']['Load'],  # [6]
+                    interpret_seating(bus_svc['NextBus3']['Load']) if short_forms is False else  # [7]
+                    bus_svc['NextBus3']['Load'],  # [7]
+                    interpret_type(bus_svc['NextBus']['Type']) if short_forms is False else  # [8]
+                    bus_svc['NextBus']['Type'],  # [8]
+                    interpret_type(bus_svc['NextBus2']['Type']) if short_forms is False else  # [9]
+                    bus_svc['NextBus']['Type'],  # [9]
+                    interpret_type(bus_svc['NextBus3']['Type']) if short_forms is False else  # [10]
+                    bus_svc['NextBus']['Type'],  # [10]
                     bus_svc['NextBus']['VisitNumber'] if bus_svc['NextBus']['VisitNumber'] != "" else "X",  # [11]
                     bus_svc['NextBus2']['VisitNumber'] if bus_svc['NextBus2']['VisitNumber'] != "" else "X",  # [12]
                     bus_svc['NextBus3']['VisitNumber'] if bus_svc['NextBus3']['VisitNumber'] != "" else "X",  # [13]

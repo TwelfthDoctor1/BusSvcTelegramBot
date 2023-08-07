@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from math import sqrt
 from pathlib import Path
 from UtilLib.JSONHandler import JSONHandler
+from UtilLib.StringLib import to_pascal_case
 
 bus_stop_data: JSONHandler
 LON_LAT_CONV = 111139
@@ -49,8 +50,8 @@ def request_bus_stop_name_lta(bus_stop_code: int or str, api_key: str, debug: bo
                         )
 
                     return (
-                        data["Description"],
-                        data["RoadName"],
+                        to_pascal_case(data["Description"]),
+                        to_pascal_case(data["RoadName"]),
                         True
                     )
 
@@ -136,8 +137,8 @@ def return_bus_stop_name_json(bus_stop_code: str):
     for data in bus_stop_data.return_specific_json("value"):
         if data["BusStopCode"] == bus_stop_code:
             return (
-                data["Description"],
-                data["RoadName"]
+                to_pascal_case(data["Description"]),
+                to_pascal_case(data["RoadName"])
                 )
 
 
@@ -182,8 +183,8 @@ def get_nearby_bus_stops(lon: float, lat: float):
             nearby_stops.append(
                 (
                     data["BusStopCode"],
-                    data["RoadName"],
-                    data["Description"],
+                    to_pascal_case(data["RoadName"]),
+                    to_pascal_case(data["Description"]),
                     round(disp)
                 )
             )

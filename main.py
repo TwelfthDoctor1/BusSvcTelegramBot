@@ -787,7 +787,7 @@ def proc_handle_setting(message: types.Message, msg_data):
 
     bot.send_message(
         message.chat.id,
-        f"The setting [{key}] has been changed.",
+        f"The setting [{mem_dict['settings'][key]['name']}] has been changed.",
         reply_markup=start_menu_keyboard()
     )
 
