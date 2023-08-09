@@ -35,11 +35,13 @@ class TransportAPIHandler:
 
         # Get Required KVs
         consolidated_timing = mem_dict["settings"]["timing_consolidated"]["data"]
+        use_emojis = mem_dict["settings"]["use_emojis"]["data"]
 
         # Get Bus Stop Data
         curr_stop_returner = request_bus_stop_name_lta(bus_stop_code, self.api_key)
         arrival_returner = request_bus_stop_timing(bus_stop_code, self.api_key, explicit_buses,
-                                                   no_exact_time=consolidated_timing, short_forms=consolidated_timing)
+                                                   no_exact_time=consolidated_timing, short_forms=consolidated_timing,
+                                                   use_emojis=use_emojis)
         main_returner = []
 
         # Header Formulation

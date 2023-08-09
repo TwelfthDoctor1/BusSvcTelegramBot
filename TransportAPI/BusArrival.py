@@ -4,21 +4,29 @@ import urllib.request
 from UtilLib.StringLib import *
 
 
-SEATING = [("SEA", "Seating Available"), ("SDA", "Standing Available"), ("LSD", "Limited Standing")]
+SEATING = [("SEA", "Seating Available", "🟩"), ("SDA", "Standing Available", "🟨"), ("LSD", "Limited Standing", "🟥")]
 BUS_TYPE = [("SD", "Single Deck"), ("DD", "Double Deck"), ("BD", "Bendy")]
 
 
-def interpret_seating(seating: str):
+def interpret_seating(seating: str, use_emoji: bool = False, retain_sf: bool = False):
     for seating_data in SEATING:
         if seating == seating_data[0]:
-            return seating_data[1]
+            if use_emoji is True:
+                return seating_data[2]
+            elif retain_sf is False:
+                return seating_data[1]
+            else:
+                return seating_data[0]
     return ""
 
 
-def interpret_type(bus_type: str):
+def interpret_type(bus_type: str, retain_sf: bool = False):
     for type_data in BUS_TYPE:
         if bus_type == type_data[0]:
-            return type_data[1]
+            if retain_sf is False:
+                return type_data[1]
+            else:
+                return type_data[0]
     return ""
 
 
@@ -39,7 +47,7 @@ def calculate_est_duration(dur_1: int, dur_2: int, dur_3: int):
 
 def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: list,
                             fallback_header: bool = False, debug: bool = False, return_svc_list=False,
-                            no_exact_time=False, short_forms=False):
+                            no_exact_time=False, short_forms=False, use_emojis=False):
     """
     Core Function to get and return the Timings of Services for a Bus Stop.
     For a specific number in Services, define the Service Number.
@@ -53,6 +61,7 @@ def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: li
     :param return_svc_list: Returns the Bus Services for the bus stop, WILL NOT RETURN TIMING!
     :param no_exact_time: Boolean parameter to disallow the showing of exact timing for arrivals
     :param short_forms: Show short forms of certain texts
+    :param use_emojis: Boolean parameter to use emoji for certain texts
     :return: A Tuple of 18 values (exc. !):
              [0] -> Service Number,
              [1] -> Service Operator,
@@ -423,18 +432,12 @@ def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: li
                     else f"{next_bus2}",  # [3]
                     f"{next_bus3} @ {nb_time3[0]}:{nb_time3[1]}:{nb_time3[2]}" if no_exact_time is False  # [4]
                     else f"{next_bus3}",  # [4]
-                    interpret_seating(bus_svc['NextBus']['Load']) if short_forms is False else  # [5]
-                    bus_svc['NextBus']['Load'],  # [5]
-                    interpret_seating(bus_svc['NextBus2']['Load']) if short_forms is False else  # [6]
-                    bus_svc['NextBus2']['Load'],  # [6]
-                    interpret_seating(bus_svc['NextBus3']['Load']) if short_forms is False else  # [7]
-                    bus_svc['NextBus3']['Load'],  # [7]
-                    interpret_type(bus_svc['NextBus']['Type']) if short_forms is False else  # [8]
-                    bus_svc['NextBus']['Type'],  # [8]
-                    interpret_type(bus_svc['NextBus2']['Type']) if short_forms is False else  # [9]
-                    bus_svc['NextBus']['Type'],  # [9]
-                    interpret_type(bus_svc['NextBus3']['Type']) if short_forms is False else  # [10]
-                    bus_svc['NextBus']['Type'],  # [10]
+                    interpret_seating(bus_svc['NextBus']['Load'], use_emojis, short_forms),  # [5]
+                    interpret_seating(bus_svc['NextBus2']['Load'], use_emojis, short_forms),  # [6]
+                    interpret_seating(bus_svc['NextBus3']['Load'], use_emojis, short_forms),  # [7]
+                    interpret_type(bus_svc['NextBus']['Type'], short_forms),  # [8]
+                    interpret_type(bus_svc['NextBus2']['Type'], short_forms),  # [9]
+                    interpret_type(bus_svc['NextBus3']['Type'], short_forms),  # [10]
                     bus_svc['NextBus']['VisitNumber'] if bus_svc['NextBus']['VisitNumber'] != "" else "X",  # [11]
                     bus_svc['NextBus2']['VisitNumber'] if bus_svc['NextBus2']['VisitNumber'] != "" else "X",  # [12]
                     bus_svc['NextBus3']['VisitNumber'] if bus_svc['NextBus3']['VisitNumber'] != "" else "X",  # [13]

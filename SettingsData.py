@@ -7,5 +7,9 @@ SETTINGS_DATA = {
     "timing_consolidated": {
         "name": "Consolidated Timings",
         "data": False
+    },
+    "use_emojis": {
+        "name": "Use Emojis",
+        "data": True
     }
 }

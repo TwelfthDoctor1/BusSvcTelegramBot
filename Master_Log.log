@@ -1,85 +1,75 @@
 TwelfthDoctor1's Master Log
 Apprentice Version: Developer Version 1.3.0
 ==================================================================================================
-Creation Date: 7 August 2023 [UK] | 2023 August 7 [US]
-Creation Time: 09:57:47 PM
+Creation Date: 9 August 2023 [UK] | 2023 August 9 [US]
+Creation Time: 08:19:20 PM
 ==================================================================================================
 NEW LOG ENTRIES WILL BE APPENDED BELOW. ALL DATETIME WILL FOLLOW THE UK FORMAT.
 ==================================================================================================
 MASTER LOG IS USED UNDER THE DIGRESSION OF TWELFTHDOCTOR1 UNDER THE USAGE OF DEBUG & TESTING.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:57:48 PM] JSONHandler Class @ BusStopData | None]
+[INFO: 9 August 2023 | 08:19:21 PM] JSONHandler Class @ BusStopData | None]
 
 JSON File has been updated. All previous data entries have been overridden.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:57:48 PM] JSONHandler Class @ BusStopData | None]
+[INFO: 9 August 2023 | 08:19:21 PM] JSONHandler Class @ BusStopData | None]
 
 Formulated & ascertained JSON File Data. Data can now be acquired/set with get/set functions.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:57:49 PM] JSONHandler Class @ BusServiceData | None]
+[INFO: 9 August 2023 | 08:19:21 PM] JSONHandler Class @ BusServiceData | None]
 
 JSON File has been updated. All previous data entries have been overridden.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:57:49 PM] JSONHandler Class @ BusServiceData | None]
+[INFO: 9 August 2023 | 08:19:21 PM] JSONHandler Class @ BusServiceData | None]
 
 Formulated & ascertained JSON File Data. Data can now be acquired/set with get/set functions.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:57:49 PM] Main Module | TwelfthDoctor1]
+[INFO: 9 August 2023 | 08:19:21 PM] Main Module | TwelfthDoctor1]
 
 Updated data for Bus stop and Services data.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:57:49 PM] JSONHandler Class @ MemoryData | None]
+[INFO: 9 August 2023 | 08:19:21 PM] JSONHandler Class @ MemoryData | None]
 
 JSON File (MemoryData) already exists. Skipping...
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:57:49 PM] JSONHandler Class @ MemoryData | None]
+[INFO: 9 August 2023 | 08:19:21 PM] JSONHandler Class @ MemoryData | None]
 
 Formulated & ascertained JSON File Data. Data can now be acquired/set with get/set functions.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:57:51 PM] JSONHandler Class @ MemoryData | None]
+[INFO: 9 August 2023 | 08:19:46 PM] JSONHandler Class @ MemoryData | None]
 
 Formulated & ascertained JSON File Data. Data can now be acquired/set with get/set functions.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:58:00 PM] JSONHandler Class @ MemoryData | None]
+[INFO: 9 August 2023 | 08:19:47 PM] JSONHandler Class @ MemoryData | None]
 
 JSON File has been updated. All previous data entries have been overridden.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:58:05 PM] JSONHandler Class @ MemoryData | None]
+[INFO: 9 August 2023 | 08:20:00 PM] JSONHandler Class @ MemoryData | None]
 
 JSON File has been updated. All previous data entries have been overridden.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:58:08 PM] JSONHandler Class @ MemoryData | None]
+[INFO: 9 August 2023 | 08:20:03 PM] JSONHandler Class @ MemoryData | None]
 
 JSON File has been updated. All previous data entries have been overridden.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:58:10 PM] JSONHandler Class @ MemoryData | None]
+[INFO: 9 August 2023 | 08:20:05 PM] JSONHandler Class @ MemoryData | None]
 
 Formulated & ascertained JSON File Data. Data can now be acquired/set with get/set functions.
 ==================================================================================================
 
-[INFO: 7 August 2023 | 09:58:19 PM] JSONHandler Class @ MemoryData | None]
-
-JSON File has been updated. All previous data entries have been overridden.
-==================================================================================================
-
-[INFO: 7 August 2023 | 09:58:21 PM] JSONHandler Class @ MemoryData | None]
-
-JSON File has been updated. All previous data entries have been overridden.
-==================================================================================================
-
-[INFO: 7 August 2023 | 09:58:23 PM] JSONHandler Class @ MemoryData | None]
+[INFO: 9 August 2023 | 08:20:06 PM] JSONHandler Class @ MemoryData | None]
 
 JSON File has been updated. All previous data entries have been overridden.
 ==================================================================================================
