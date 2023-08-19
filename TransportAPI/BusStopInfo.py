@@ -147,7 +147,7 @@ def request_bus_stop_code_from_name(stop_name: str, road_name: str = ""):
         if data["Description"].lower() == stop_name.lower() and data["RoadName"].lower() == road_name:
             bus_stop.append((data["BusStopCode"], data["Description"], data["RoadName"]))
             continue
-        elif data["Description"].lower() == stop_name.lower() and road_name == "":
+        elif data["Description"].lower().find(stop_name.lower()) != -1 and road_name == "":
             bus_stop.append((data["BusStopCode"], data["Description"], data["RoadName"]))
             continue
 

@@ -5,7 +5,7 @@ from pathlib import Path
 from telebot import types
 from SettingsData import SETTINGS_DATA
 from TelegramBotFuncs.KeyboardHandling import start_menu_keyboard, location_keyboard, \
-    option_keyboard, get_option_number, cancel_only_keyboard
+    option_keyboard, get_option_number, cancel_only_keyboard, filtering_keyboard
 from TelegramBotFuncs.NameGetting import get_user_name
 from TransportAPI.APIHandler import TransportAPIHandler
 from TransportAPI.BusStopInfo import store_bus_stop_data, request_bus_stop_code_from_name, get_nearby_bus_stops, \
@@ -88,10 +88,11 @@ def query_timing(message: types.Message):
         message.chat.id,
         "Enter either the following to query bus timings:"
         "\n- 5-digit Bus Stop Code"
-        "\n- Bus Stop Name and/or Road Name (i.e. Aft Blk 87 @ Zion Road OR Aft Blk 87)",
-        reply_markup=cancel_only_keyboard()
+        "\n- Bus Stop Name and/or Road Name (i.e. Aft Blk 87 @ Zion Road OR Aft Blk 87)"
+        "\n\nOr Send Location for nearby bus stops.",
+        reply_markup=location_keyboard()
     )
-    bot.register_next_step_handler(sent_msg, bus_stop_selection_bypass)
+    bot.register_next_step_handler(sent_msg, search_query_proc)
 
 
 @bot.message_handler(commands=["filter"])
@@ -115,10 +116,10 @@ def filter_preface(message: types.Message):
         )
         return
 
-    return bus_stop_selection_bypass(message, mem_dict["bus_mem"])
+    return bus_stop_selection(message, mem_dict["bus_mem"])
 
 
-def bus_stop_selection_bypass(message: types.Message, bus_stop_code: str or list = ""):
+def bus_stop_selection(message: types.Message, bus_stop_code: str or list = ""):
     """
     Function to filter a bus stop from a list. (If any) Else, it will be passed through to filtering.
     :param message:
@@ -198,12 +199,12 @@ def pre_filter_get_bus_stop(message: types.Message, bus_stop_code, msg_data):
     # Not an Integer
     elif message.text.isdigit() is False:
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
-        return bus_stop_selection_bypass(message, bus_stop_code)
+        return bus_stop_selection(message, bus_stop_code)
 
     # Option out of range
     elif int(message.text) <= 0 or int(message.text) > len(bus_stop_code):
         bot.send_message(message.chat.id, "Option out of range. Please try again.")
-        return bus_stop_selection_bypass(message, bus_stop_code)
+        return bus_stop_selection(message, bus_stop_code)
 
     # Option - Raw Integer
     return svc_filtering(message, bus_stop_code[int(message.text) - 1][0])
@@ -223,7 +224,7 @@ def svc_filtering(message: types.Message, bus_stop_code: str = ""):
     bot.send_message(
         message.chat.id,
         "Enter the explicit bus services to see only. Otherwise leave 0 to see all services. (i.e.: 5, 12e, 46)",
-        reply_markup=cancel_only_keyboard()
+        reply_markup=filtering_keyboard()
     )
 
     sent_msg = bot.send_message(message.chat.id, f"Services:\n{svc_list}")
@@ -293,7 +294,7 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
         bus_svc_list_str = message.text
 
     # No Filter - 0
-    if bus_svc_list_str == "0":
+    if bus_svc_list_str == "0" or bus_svc_list_str == "No Filtering":
         bus_svc_list = []
         mem_dict["svc_mem"] = []
 
@@ -423,6 +424,9 @@ def search_query_proc(message: types.Message):
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
+    if message.location is None:
+        return bus_stop_selection(message, message.text)
+
     # Get location from message data
     lon = message.location.longitude
     lat = message.location.latitude
@@ -468,7 +472,7 @@ def post_search_query(message: types.Message, nearby_stops: list, msg_data):
     # Option - Button
     elif message.text.startswith("[") is True:
         opt_num = get_option_number(message.text, msg_data)
-        return bus_stop_selection_bypass(message, nearby_stops[int(opt_num) - 1][0])
+        return bus_stop_selection(message, nearby_stops[int(opt_num) - 1][0])
 
     # Not an Integer
     elif message.text.isdigit() is False:
@@ -481,7 +485,7 @@ def post_search_query(message: types.Message, nearby_stops: list, msg_data):
         return search_query(message)
 
     # Option - Raw Integer
-    return bus_stop_selection_bypass(message, nearby_stops[int(message.text) - 1][0])
+    return bus_stop_selection(message, nearby_stops[int(message.text) - 1][0])
 
 
 @bot.message_handler(commands=["add_to_favourites"])

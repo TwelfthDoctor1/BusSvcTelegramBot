@@ -6,7 +6,7 @@ def start_menu_keyboard():
 
     kb.add(
         types.KeyboardButton("Query Timing"),
-        types.KeyboardButton("Search"),
+        # types.KeyboardButton("Search"),
         types.KeyboardButton("Refresh"),
         types.KeyboardButton("Filter"),
         types.KeyboardButton("Cancel"),
@@ -85,6 +85,17 @@ def cancel_only_keyboard():
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
 
     kb.add(
+        types.KeyboardButton("Cancel")
+    )
+
+    return kb
+
+
+def filtering_keyboard():
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+
+    kb.add(
+        types.KeyboardButton("No Filtering"),
         types.KeyboardButton("Cancel")
     )
 

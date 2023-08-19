@@ -5032,6 +5032,32 @@
             "ServiceNo": "59"
         },
         {
+            "AM_Offpeak_Freq": "-",
+            "AM_Peak_Freq": "24-28",
+            "Category": "TRUNK",
+            "DestinationCode": "96049",
+            "Direction": 1,
+            "LoopDesc": "",
+            "Operator": "SBST",
+            "OriginCode": "98319",
+            "PM_Offpeak_Freq": "-",
+            "PM_Peak_Freq": "-",
+            "ServiceNo": "5A"
+        },
+        {
+            "AM_Offpeak_Freq": "-",
+            "AM_Peak_Freq": "-",
+            "Category": "TRUNK",
+            "DestinationCode": "98311",
+            "Direction": 1,
+            "LoopDesc": "",
+            "Operator": "SBST",
+            "OriginCode": "96169",
+            "PM_Offpeak_Freq": "-",
+            "PM_Peak_Freq": "44-44",
+            "ServiceNo": "5B"
+        },
+        {
             "AM_Offpeak_Freq": "08-11",
             "AM_Peak_Freq": "06-09",
             "Category": "TRUNK",
