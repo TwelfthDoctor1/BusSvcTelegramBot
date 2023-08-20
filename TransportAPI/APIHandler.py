@@ -136,9 +136,9 @@ class TransportAPIHandler:
                 for i in range(11, 14):
                     if int(arrival_data[i]) == 1 or arrival_data[i] == "X":
                         if arrival_data[i - 9].startswith("Not in Service"):
-                            visit_1.append(f"{arrival_data[i - 9]} | {arrival_data[i - 6]} | {arrival_data[i - 3]}")
-                        else:
                             visit_1.append(f"Not in Service")
+                        else:
+                            visit_1.append(f"{arrival_data[i - 9]} | {arrival_data[i - 6]} | {arrival_data[i - 3]}")
                     else:
                         visit_2.append(f"{arrival_data[i - 9]} | {arrival_data[i - 6]} | {arrival_data[i - 3]}")
 
