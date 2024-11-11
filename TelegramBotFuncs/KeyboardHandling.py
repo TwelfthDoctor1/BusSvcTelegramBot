@@ -91,15 +91,45 @@ def cancel_only_keyboard():
     return kb
 
 
-def filtering_keyboard():
-    kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+def filtering_keyboard(svc_list: str, svc_filter: list):
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+
+    svc_list = svc_list.split(",")
+    kb_inter_list = []
+
+    for svc in svc_list:
+        svc = svc.strip()
+        if svc not in svc_filter:
+            kb_inter_list.append(types.KeyboardButton(f"{svc}"))
+        else:
+            kb_inter_list.append(types.KeyboardButton(f"{svc} ✅"))
+
+        if len(kb_inter_list) == 3:
+            kb.add(
+                kb_inter_list[0],
+                kb_inter_list[1],
+                kb_inter_list[2]
+            )
+            kb_inter_list = []
 
     kb.add(
         types.KeyboardButton("No Filtering"),
+        types.KeyboardButton("Done"),
         types.KeyboardButton("Cancel")
     )
 
     return kb
+
+
+def debug_keyboard():
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
+
+    kb.add(
+        types.KeyboardButton("Formulate JSON"),
+        types.KeyboardButton("Refresh Cache"),
+        types.KeyboardButton("Restart"),
+        types.KeyboardButton("Cancel")
+    )
 
 
 def destroy_keyboard():

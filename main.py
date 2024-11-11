@@ -5,7 +5,7 @@ from pathlib import Path
 from telebot import types
 from SettingsData import SETTINGS_DATA
 from TelegramBotFuncs.KeyboardHandling import start_menu_keyboard, location_keyboard, \
-    option_keyboard, get_option_number, cancel_only_keyboard, filtering_keyboard
+    option_keyboard, get_option_number, cancel_only_keyboard, filtering_keyboard, debug_keyboard
 from TelegramBotFuncs.NameGetting import get_user_name
 from TransportAPI.APIHandler import TransportAPIHandler
 from TransportAPI.BusStopInfo import store_bus_stop_data, request_bus_stop_code_from_name, get_nearby_bus_stops, \
@@ -52,6 +52,9 @@ cache_bus_stop_svc_data()
 
 # Bot Class Var
 bot = telebot.TeleBot(API_KEY_TG)
+
+# TestValues
+svc_filter_ran_once = False
 
 # ======================================================================================================================
 # JSON Memory Handling
@@ -210,11 +213,12 @@ def pre_filter_get_bus_stop(message: types.Message, bus_stop_code, msg_data):
     return svc_filtering(message, bus_stop_code[int(message.text) - 1][0])
 
 
-def svc_filtering(message: types.Message, bus_stop_code: str = ""):
+def svc_filtering(message: types.Message, bus_stop_code: str = "", svc_filter: list = []):
     """
     Function to filter for an explicit group of services from the full list of services in a bus stop.
     :param message:
     :param bus_stop_code:
+    :param svc_filter:
     :return:
     """
     # Request Service List
@@ -224,11 +228,47 @@ def svc_filtering(message: types.Message, bus_stop_code: str = ""):
     bot.send_message(
         message.chat.id,
         "Enter the explicit bus services to see only. Otherwise leave 0 to see all services. (i.e.: 5, 12e, 46)",
-        reply_markup=filtering_keyboard()
+        reply_markup=filtering_keyboard(svc_list, svc_filter)
     )
 
-    sent_msg = bot.send_message(message.chat.id, f"Services:\n{svc_list}")
-    bot.register_next_step_handler(sent_msg, parse_data, bus_stop_code)
+    sent_msg = bot.send_message(message.chat.id, f"Services:\n{svc_list}\n\nFilter: {','.join(svc_filter)}")
+    bot.register_next_step_handler(sent_msg, post_svc_filtering, bus_stop_code, svc_filter)
+
+
+def post_svc_filtering(message: types.Message, bus_stop_code, svc_filter: list = []):
+    if message.text == "/cancel" or message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
+        return
+
+    # No Filter
+    elif message.text == "No Filtering":
+        return parse_data(message, bus_stop_code)
+
+    elif message.text == "Done":
+        svc_str = ", ".join(svc_filter)
+        return parse_data(message, bus_stop_code, svc_str)
+
+    svc_sel = message.text.split(",")
+    mem_dict = json_mem.return_specific_json(f"{get_user_name(message)}")
+    global svc_filter_ran_once
+    if bus_stop_code != mem_dict["bus_mem"] and svc_filter_ran_once is False:
+        svc_filter = []
+        svc_filter_ran_once = True
+
+    for svc in svc_sel:
+        if svc.find("✅") != -1:
+            svc = svc[0:svc.index("✅") - 1]
+            svc_filter.remove(svc)
+            continue
+
+        if svc not in svc_filter:
+            svc_filter.append(svc)
+            svc_filter.sort()
+        else:
+            svc_filter.remove(svc)
+
+    # Option - Raw Integer
+    return svc_filtering(message, bus_stop_code, svc_filter)
 
 
 def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str = ""):
@@ -268,7 +308,7 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
         return
 
-    # If Var is a integer -> Bus Stop Code
+    # If Var is an integer -> Bus Stop Code
     if bus_stop_info.isdigit():
         bus_stop_code = bus_stop_info
 
@@ -347,6 +387,9 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
     # Save data to JSON Mem
     json_mem.update_specific_json(f"{get_user_name(message)}", mem_dict)
     json_mem.update_json_file()
+
+    global svc_filter_ran_once
+    svc_filter_ran_once = False
 
 
 @bot.message_handler(commands=["refresh"])
@@ -796,6 +839,39 @@ def proc_handle_setting(message: types.Message, msg_data):
     )
 
 
+@bot.message_handler(commands=["debug"])
+def debug_mode_main(message: types.Message):
+    if get_user_name(message) != "TwelfthDoctor1":
+        return
+
+    msg = "Debug Mode\n"
+
+    msg_data = []
+
+    msg += f"\n\nSelect debug action: "
+
+    sent_msg = bot.send_message(
+        message.chat.id,
+        msg,
+        reply_markup=debug_keyboard()
+    )
+
+    bot.register_next_step_handler(sent_msg, debug_mode_proc)
+
+
+def debug_mode_proc(message: types.Message):
+    # User Cancel
+    if message.text == "/cancel" or message.text == "Cancel":
+        bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
+        return
+
+    elif message.text == "Formulate JSON":
+        json_mem.formulate_json()
+
+    elif message.text == "Refresh Cache":
+        refresh_cache(message)
+
+
 @bot.message_handler(func=lambda message: True)
 def kb_text_redirect(message: types.Message):
     """
@@ -821,6 +897,8 @@ def kb_text_redirect(message: types.Message):
         return delete_favourites_list(message)
     elif message.text == "Settings":
         return settings_init(message)
+    elif message.text == "Debug Mode":
+        return debug_mode_main(message)
 
 
 # ======================================================================================================================

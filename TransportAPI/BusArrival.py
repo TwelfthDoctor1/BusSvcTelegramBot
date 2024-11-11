@@ -86,7 +86,7 @@ def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: li
              [!] -> Note: For 14 to 17, bool state is to be used to determine on which type of duration(s) to be shown.
     """
     # URL Construct
-    url = f"http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode={bus_stop_code}"
+    url = f"https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival?BusStopCode={bus_stop_code}"
 
     # Service Specific Addition - To use sep. method instead
     # if svc_num != "":
