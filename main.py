@@ -224,6 +224,8 @@ def svc_filtering(message: types.Message, bus_stop_code: str = "", svc_filter: l
     # Request Service List
     svc_list = api_handler.request_bus_stop_svc_list(bus_stop_code)
 
+    print(f"{svc_list} | {svc_filter}")
+
     # Show message of available services to be filtered
     bot.send_message(
         message.chat.id,
@@ -238,6 +240,7 @@ def svc_filtering(message: types.Message, bus_stop_code: str = "", svc_filter: l
 def post_svc_filtering(message: types.Message, bus_stop_code, svc_filter: list = []):
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard())
+        svc_filter = []
         return
 
     # No Filter
@@ -899,6 +902,8 @@ def kb_text_redirect(message: types.Message):
         return settings_init(message)
     elif message.text == "Debug Mode":
         return debug_mode_main(message)
+    else:
+        return None
 
 
 # ======================================================================================================================

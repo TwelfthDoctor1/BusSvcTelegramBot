@@ -98,19 +98,40 @@ def filtering_keyboard(svc_list: str, svc_filter: list):
     kb_inter_list = []
 
     for svc in svc_list:
+        svc_raw = svc
         svc = svc.strip()
+
+        print(f"SVC PARSE: {svc}")
+
         if svc not in svc_filter:
             kb_inter_list.append(types.KeyboardButton(f"{svc}"))
         else:
             kb_inter_list.append(types.KeyboardButton(f"{svc} ✅"))
 
         if len(kb_inter_list) == 3:
+
             kb.add(
                 kb_inter_list[0],
                 kb_inter_list[1],
                 kb_inter_list[2]
             )
             kb_inter_list = []
+
+        elif svc_list.index(svc_raw) == len(svc_list) - 1 and len(kb_inter_list) == 2:
+
+            kb.add(
+                kb_inter_list[0],
+                kb_inter_list[1]
+            )
+            kb_inter_list = []
+
+        elif svc_list.index(svc_raw) == len(svc_list) - 1 and len(kb_inter_list) == 1:
+
+            kb.add(
+                kb_inter_list[0]
+            )
+            kb_inter_list = []
+
 
     kb.add(
         types.KeyboardButton("No Filtering"),
@@ -130,6 +151,8 @@ def debug_keyboard():
         types.KeyboardButton("Restart"),
         types.KeyboardButton("Cancel")
     )
+
+    return kb
 
 
 def destroy_keyboard():

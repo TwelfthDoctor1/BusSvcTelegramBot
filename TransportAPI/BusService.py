@@ -42,7 +42,7 @@ def request_bus_svc_info(svc: str, direction: int, api_key: str):
     """
     skip_val = 0
     while True:
-        url = f"http://datamall2.mytransport.sg/ltaodataservice/BusServices?$skip={skip_val}"
+        url = f"https://datamall2.mytransport.sg/ltaodataservice/BusServices?$skip={skip_val}"
 
         headers = {
             "AccountKey": api_key,
@@ -95,7 +95,7 @@ def store_bus_svc_data(api_key: str):
     curr_data = {"value": []}
     skip_val = 0
     while True:
-        url = f"http://datamall2.mytransport.sg/ltaodataservice/BusServices?$skip={skip_val}"
+        url = f"https://datamall2.mytransport.sg/ltaodataservice/BusServices?$skip={skip_val}"
 
         headers = {
             "AccountKey": api_key,
