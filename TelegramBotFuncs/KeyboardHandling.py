@@ -1,7 +1,9 @@
 from telebot import types
 
+from TelegramBotFuncs.NameGetting import get_user_name
 
-def start_menu_keyboard():
+
+def start_menu_keyboard(message):
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
 
     kb.add(
@@ -16,6 +18,9 @@ def start_menu_keyboard():
         types.KeyboardButton("Delete from Favourites"),
         types.KeyboardButton("Settings")
     )
+
+    if get_user_name(message) == "TwelfthDoctor1":
+        kb.add(types.KeyboardButton("Debug Mode"))
 
     return kb
 
