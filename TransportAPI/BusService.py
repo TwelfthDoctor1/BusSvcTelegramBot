@@ -145,6 +145,91 @@ def return_bus_svc_json(svc: str, direction: int):
             )
 
 
+def get_bus_svc_list():
+    bus_svc_list = []
+    for data in bus_svc_data.return_specific_json("value"):
+        if data["ServiceNo"] not in bus_svc_list:
+            bus_svc_list.append(data["ServiceNo"])
+
+    return sort_bus_svc_list(bus_svc_list)
+
+
+def sort_bus_svc_list(svc_list: list):
+    reg_num_svc = []
+    sp_svc_list = []
+    sep_sp_svc_list = {}
+    final_svc_list = []
+
+    for svc in svc_list:
+        if svc.isdigit():
+            reg_num_svc.append(int(svc))
+            # print(f"APPEND {svc} to REG LIST")
+        else:
+            sp_svc_list.append(svc)
+            # print(f"APPEND {svc} to SP LIST")
+
+    reg_num_svc = sorted(reg_num_svc)
+
+    for sp_svc in sp_svc_list:
+        num = ""
+        svc_uid = ""
+        for i in sp_svc:
+            if i.isdigit():
+                num += i
+            else:
+                svc_uid += i
+
+        sep_sp_svc_list[int(num)] = svc_uid
+
+        # print(f"K: {num} V: {svc_uid}")
+
+    for svc in reg_num_svc:
+        if svc not in sep_sp_svc_list:
+            final_svc_list.append(str(svc))
+            # print(f"APPEND {svc} to LIST")
+        else:
+            final_svc_list.append(str(svc))
+            # print(f"APPEND {svc} to LIST")
+
+            final_svc_list.append(str(svc) + str(sep_sp_svc_list[svc]))
+            # print(f"APPEND {str(svc) + str(sep_sp_svc_list[svc])} to LIST")
+
+    return final_svc_list
+
+
+def get_bus_svc_directions(svc: str):
+    bus_svc_list = []
+    for data in bus_svc_data.return_specific_json("value"):
+        # print(f"{data["ServiceNo"]} || {svc}")
+        is_loop = False
+        if data["ServiceNo"] == svc:
+
+            if data["Direction"] == 1 and data["LoopDesc"] != "":
+                is_loop = True
+
+            for (k, v) in dbl_loop_data.items():
+                if k == data["ServiceNo"]:
+                    data["LoopDesc"] = v
+
+            bus_svc_list.append((
+                data["ServiceNo"],
+                data["Direction"],
+                data["Category"],
+                data["OriginCode"],
+                data["DestinationCode"],
+                data["LoopDesc"],
+                is_loop
+            ))
+
+            # print(f"LEN: {len(bus_svc_list)}")
+
+            if is_loop or len(bus_svc_list) == 2:
+                # print(F"EXIT FUNC: \n {bus_svc_list}")
+                return bus_svc_list
+
+    return bus_svc_list
+
+
 if __name__ == "__main__":
     ENV_PATH = os.path.join(Path(__file__).resolve().parent.parent, "RefKey.env")
 

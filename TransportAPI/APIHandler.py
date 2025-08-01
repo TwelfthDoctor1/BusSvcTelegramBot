@@ -44,7 +44,7 @@ class TransportAPIHandler:
                                                    use_emojis=use_emojis)
         main_returner = []
 
-        # Header Formulation
+
         if curr_stop_returner[2] is True:
             print(
                 f"=======================================================================================\n"
@@ -93,9 +93,9 @@ class TransportAPIHandler:
                 f"Service [{arrival_data[0]}] | {arrival_data[1]}\n"
                 f"{svc_info}\n"
                 f"=======================================================================================\n"
-                f"1. {arrival_data[2]} | {arrival_data[5]} | {arrival_data[8]} | Visit: {arrival_data[11]}\n"
-                f"2. {arrival_data[3]} | {arrival_data[6]} | {arrival_data[9]} | Visit: {arrival_data[12]}\n"
-                f"3. {arrival_data[4]} | {arrival_data[7]} | {arrival_data[10]} | Visit: {arrival_data[13]}\n"
+                f"{arrival_data[2]} | {arrival_data[5]} | {arrival_data[8]} | Visit: {arrival_data[11]}\n"
+                f"{arrival_data[3]} | {arrival_data[6]} | {arrival_data[9]} | Visit: {arrival_data[12]}\n"
+                f"{arrival_data[4]} | {arrival_data[7]} | {arrival_data[10]} | Visit: {arrival_data[13]}\n"
             )
 
             print(
@@ -108,57 +108,18 @@ class TransportAPIHandler:
                 f"======================================================================================="
             )
 
-            if arrival_data[17] is True:
-                visit_data = []
-                for i in range(2, 5):
-                    if arrival_data[i].startswith("Not in Service") is False:
-                        visit_data.append(f"{arrival_data[i]} | {arrival_data[i + 3]} | {arrival_data[i + 6]}")
-                    else:
-                        visit_data.append("Not in Service")
-
-                main_returner.append(
-                    [
-                        f"Service [{arrival_data[0]}] | {arrival_data[1]}",
-                        f"{svc_info}",
-                        f"1. {visit_data[0]}",
-                        f"2. {visit_data[1]}",
-                        f"3. {visit_data[2]}",
-                        f"Estimated Duration: {arrival_data[14]} min"
-                    ]
-                )
-
-            else:
-                visit_1 = []
-                visit_2 = []
-                visit_1_msg = ""
-                visit_2_msg = ""
-
-                for i in range(11, 14):
-                    if int(arrival_data[i]) == 1 or arrival_data[i] == "X":
-                        if arrival_data[i - 9].startswith("Not in Service"):
-                            visit_1.append(f"Not in Service")
-                        else:
-                            visit_1.append(f"{arrival_data[i - 9]} | {arrival_data[i - 6]} | {arrival_data[i - 3]}")
-                    else:
-                        visit_2.append(f"{arrival_data[i - 9]} | {arrival_data[i - 6]} | {arrival_data[i - 3]}")
-
-                for i in range(len(visit_1)):
-                    visit_1_msg += f"\n{i + 1}. {visit_1[i]}"
-
-                for i in range(len(visit_2)):
-                    visit_2_msg += f"\n{i + 1}. {visit_2[i]}"
-
-                main_returner.append(
-                    [
-                        f"Service [{arrival_data[0]}] | {arrival_data[1]}",
-                        f"{svc_info}",
-                        f"1st Visit:{visit_1_msg}",
-                        f"",
-                        f"2nd Visit:{visit_2_msg}",
-                        f"Est. Duration (Visit 1): {arrival_data[15]} min\n"
-                        f"Estimated Duration (Visit 2): {arrival_data[16]} min"
-                    ]
-                )
+            main_returner.append(
+                [
+                    f"Service [{arrival_data[0]}] | {arrival_data[1]}",
+                    f"{svc_info}",
+                    f"{arrival_data[2]} | {arrival_data[5]} | {arrival_data[8]} | Visit: {arrival_data[11]}",
+                    f"{arrival_data[3]} | {arrival_data[6]} | {arrival_data[9]} | Visit: {arrival_data[12]}",
+                    f"{arrival_data[4]} | {arrival_data[7]} | {arrival_data[10]} | Visit: {arrival_data[13]}",
+                    f"Estimated Duration: {arrival_data[14]} min" if arrival_data[17] is True else
+                    f"Estimated Duration (Visit 1): {arrival_data[15]} min\n"
+                    f"Estimated Duration (Visit 2): {arrival_data[16]} min"
+                ]
+            )
 
         return main_returner
 
@@ -170,8 +131,8 @@ class TransportAPIHandler:
 
         for i in range(len(svc_returner)):
             if i == 0:
-                returner = str(svc_returner[i][0])
+                returner = str(svc_returner[i])
             else:
-                returner += f", {svc_returner[i][0]}"
+                returner += f", {svc_returner[i]}"
 
         return returner

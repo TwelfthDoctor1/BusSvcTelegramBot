@@ -2,6 +2,7 @@ import json
 import os
 import ssl
 import urllib.request
+from urllib.error import URLError
 from dotenv import load_dotenv
 from math import sqrt
 from pathlib import Path
@@ -142,23 +143,14 @@ def return_bus_stop_name_json(bus_stop_code: str):
 
 
 def request_bus_stop_code_from_name(stop_name: str, road_name: str = ""):
-    bus_stop = []
     for data in bus_stop_data.return_specific_json("value"):
+        if data["Description"].lower() == stop_name.lower() and road_name == "":
+            return data["BusStopCode"]
+
         if data["Description"].lower() == stop_name.lower() and data["RoadName"].lower() == road_name:
-            bus_stop.append((data["BusStopCode"], data["Description"], data["RoadName"]))
-            continue
-        elif data["Description"].lower().find(stop_name.lower()) != -1 and road_name == "":
-            bus_stop.append((data["BusStopCode"], data["Description"], data["RoadName"]))
-            continue
+            return data["BusStopCode"]
 
-    if len(bus_stop) == 0:
-        return "00000"
-
-    elif len(bus_stop) == 1:
-        return bus_stop[0][0]
-
-    else:
-        return bus_stop
+    return "00000"
 
 
 def get_nearby_bus_stops(lon: float, lat: float):
