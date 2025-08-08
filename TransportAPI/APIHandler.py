@@ -1,7 +1,8 @@
 from SettingsData import SETTINGS_DATA
-from TransportAPI.BusStopInfo import request_bus_stop_name_lta, return_bus_stop_name_json
+from TransportAPI.BusStopInfo import request_bus_stop_name_lta, return_bus_stop_name_json, store_bus_stop_data
 from TransportAPI.BusArrival import request_bus_stop_timing
-from TransportAPI.BusService import return_bus_svc_json
+from TransportAPI.BusService import return_bus_svc_json, store_bus_svc_data
+from TransportAPI.BusRoute import store_bus_route_data, get_bus_svc_from_bus_stop_code
 from UtilLib.JSONHandler import JSONHandler
 
 
@@ -9,6 +10,11 @@ class TransportAPIHandler:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.json_mem = JSONHandler("MemoryData")
+
+    def store_json_data(self):
+        store_bus_stop_data(self.api_key)
+        store_bus_svc_data(self.api_key)
+        store_bus_route_data(self.api_key)
 
     def request_arrival_time(self, bus_stop_code: str, explicit_buses: list, name: str):
         # JSON Settings Values Formulation
@@ -30,7 +36,7 @@ class TransportAPIHandler:
                         continue
 
                 # Insert new KV if non existent
-                if verify_check is False:
+                if not verify_check:
                     mem_dict["settings"][key_verify] = value_verify
 
         # Get Required KVs
@@ -123,11 +129,15 @@ class TransportAPIHandler:
 
         return main_returner
 
-    def request_bus_stop_svc_list(self, bus_stop_code: str):
+    @staticmethod
+    def request_bus_stop_svc_list(bus_stop_code: str):
         returner = ""
 
-        svc_returner = request_bus_stop_timing(bus_stop_code=bus_stop_code, api_key=self.api_key, svc_num=[],
-                                               return_svc_list=True)
+        # Noted that no bus services will list on end of service - Write new method and deprecate old method
+        # svc_returner = request_bus_stop_timing(bus_stop_code=bus_stop_code, api_key=self.api_key, svc_num=[],
+        #                                        return_svc_list=True)
+
+        svc_returner = get_bus_svc_from_bus_stop_code(bus_stop_code)
 
         for i in range(len(svc_returner)):
             if i == 0:

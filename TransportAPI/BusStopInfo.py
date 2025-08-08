@@ -2,7 +2,6 @@ import json
 import os
 import ssl
 import urllib.request
-from urllib.error import URLError
 from dotenv import load_dotenv
 from math import sqrt
 from pathlib import Path
@@ -12,7 +11,7 @@ bus_stop_data: JSONHandler
 LON_LAT_CONV = 111139
 
 
-def request_bus_stop_name_lta(bus_stop_code: int or str, api_key: str, debug: bool = False):
+def request_bus_stop_name_lta(bus_stop_code: int | str, api_key: str, debug: bool = False):
     """
     Gets and returns the Bus Stop Information of the Bus Stop.
 
@@ -42,7 +41,7 @@ def request_bus_stop_name_lta(bus_stop_code: int or str, api_key: str, debug: bo
 
             for data in dict_data["value"]:
                 if data["BusStopCode"] == str(bus_stop_code):
-                    if debug is True:
+                    if debug:
                         print(
                             f"=======================================================================================\n"
                             f"{data['Description']} @ {data['RoadName']} [{bus_stop_code}]\n"
@@ -66,7 +65,7 @@ def request_bus_stop_name_lta(bus_stop_code: int or str, api_key: str, debug: bo
                 skip_val += 500
 
 
-def request_bus_stop_name_tih(bus_stop_code: int or str, api_key: str):
+def request_bus_stop_name_tih(bus_stop_code: int | str, api_key: str):
     """
     RECOMMENDED NOT FOR USE FOR SECURITY REASONS.
 
@@ -141,14 +140,28 @@ def return_bus_stop_name_json(bus_stop_code: str):
                 data["RoadName"]
                 )
 
+    return None
 
-def request_bus_stop_code_from_name(stop_name: str, road_name: str = ""):
+
+def request_bus_stop_code_from_name(stop_name: str, road_name: str = "", return_first_val: bool = False):
+    matched_values = []
+
     for data in bus_stop_data.return_specific_json("value"):
+        # print(f"{data["Description"].lower()} | {stop_name.lower()} ||| {data["RoadName"].lower()} | {road_name}")
         if data["Description"].lower() == stop_name.lower() and road_name == "":
-            return data["BusStopCode"]
+            if return_first_val:
+                return data["BusStopCode"]
+            else:
+                matched_values.append([data["BusStopCode"], data["Description"], data["RoadName"]])
 
-        if data["Description"].lower() == stop_name.lower() and data["RoadName"].lower() == road_name:
-            return data["BusStopCode"]
+        if data["Description"].lower() == stop_name.lower() and data["RoadName"].lower() == road_name.lower():
+            if return_first_val:
+                return data["BusStopCode"]
+            else:
+                matched_values.append([data["BusStopCode"], data["Description"], data["RoadName"]])
+
+    if len(matched_values) > 0:
+        return matched_values
 
     return "00000"
 
@@ -205,8 +218,10 @@ if __name__ == "__main__":
 
     # Get Values from ENV
     API_KEY_LTA = os.getenv("API_KEY_LTA")
-    API_KEY_TIH = os.getenv("API_KEY_TIH")
+    # API_KEY_TIH = os.getenv("API_KEY_TIH")
+    store_bus_stop_data(API_KEY_LTA)
 
     returner = request_bus_stop_name_lta(77009, API_KEY_LTA)
 
     print(f"{returner[0]} | {returner[1]}")
+    print(f"{request_bus_stop_code_from_name('Blk 502', 'Pasir Ris St 52')}")

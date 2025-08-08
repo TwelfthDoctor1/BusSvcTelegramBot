@@ -4,13 +4,12 @@ from dotenv import load_dotenv
 from pathlib import Path
 from telebot import types
 from SettingsData import SETTINGS_DATA
-from TelegramBotFuncs.KeyboardHandling import start_menu_keyboard,location_keyboard, \
-    option_keyboard, get_option_number, cancel_only_keyboard, filtering_keyboard, debug_keyboard
+from TelegramBotFuncs.KeyboardHandling import start_menu_keyboard,location_keyboard, option_keyboard, \
+    get_option_number, filtering_keyboard, debug_keyboard
 from TelegramBotFuncs.NameGetting import get_user_name
 from TransportAPI.APIHandler import TransportAPIHandler
-from TransportAPI.BusStopInfo import store_bus_stop_data, request_bus_stop_code_from_name, get_nearby_bus_stops, \
+from TransportAPI.BusStopInfo import request_bus_stop_code_from_name, get_nearby_bus_stops, \
     return_bus_stop_name_json
-from TransportAPI.BusService import store_bus_svc_data
 from UtilLib.JSONHandler import JSONHandler
 from UtilLib.Logging import LoggerClass
 
@@ -41,8 +40,7 @@ def cache_bus_stop_svc_data():
     :return:
     """
     # Cache data
-    store_bus_stop_data(API_KEY_LTA)
-    store_bus_svc_data(API_KEY_LTA)
+    api_handler.store_json_data()
 
     logger.info("Updated data for Bus stop and Services data.")
 
@@ -117,12 +115,12 @@ def filter_preface(message: types.Message):
             "or /search instead.",
             reply_markup=start_menu_keyboard(message)
         )
-        return
+        return None
 
     return bus_stop_selection(message, mem_dict["bus_mem"])
 
 
-def bus_stop_selection(message: types.Message, bus_stop_code: str or list = ""):
+def bus_stop_selection(message: types.Message, bus_stop_code: str | list = ""):
     """
     Function to filter a bus stop from a list. (If any) Else, it will be passed through to filtering.
     :param message:
@@ -192,15 +190,15 @@ def pre_filter_get_bus_stop(message: types.Message, bus_stop_code, msg_data):
     # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard(message))
-        return
+        return None
 
     # Option - Button
-    elif message.text.startswith("[") is True:
+    elif message.text.startswith("["):
         opt_num = get_option_number(message.text, msg_data)
         return svc_filtering(message, bus_stop_code[int(opt_num) - 1][0])
 
     # Not an Integer
-    elif message.text.isdigit() is False:
+    elif not message.text.isdigit():
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
         return bus_stop_selection(message, bus_stop_code)
 
@@ -213,7 +211,7 @@ def pre_filter_get_bus_stop(message: types.Message, bus_stop_code, msg_data):
     return svc_filtering(message, bus_stop_code[int(message.text) - 1][0])
 
 
-def svc_filtering(message: types.Message, bus_stop_code: str = "", svc_filter: list = []):
+def svc_filtering(message: types.Message, bus_stop_code: str = "", svc_filter: list | None = None):
     """
     Function to filter for an explicit group of services from the full list of services in a bus stop.
     :param message:
@@ -226,6 +224,9 @@ def svc_filtering(message: types.Message, bus_stop_code: str = "", svc_filter: l
 
     print(f"{svc_list} | {svc_filter}")
 
+    if svc_filter is None:
+        svc_filter = []
+
     # Show message of available services to be filtered
     bot.send_message(
         message.chat.id,
@@ -237,11 +238,11 @@ def svc_filtering(message: types.Message, bus_stop_code: str = "", svc_filter: l
     bot.register_next_step_handler(sent_msg, post_svc_filtering, bus_stop_code, svc_filter)
 
 
-def post_svc_filtering(message: types.Message, bus_stop_code, svc_filter: list = []):
+def post_svc_filtering(message: types.Message, bus_stop_code, svc_filter: list | None = None):
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard(message))
-        svc_filter = []
-        return
+        # svc_filter = []
+        return None
 
     # No Filter
     elif message.text == "No Filtering":
@@ -301,7 +302,7 @@ def parse_data(message: types.Message, bus_stop_info: str, bus_svc_list_str: str
                     continue
 
             # Insert new KV if non existent
-            if verify_check is False:
+            if not verify_check:
                 mem_dict["settings"][key_verify] = value_verify
 
     hide_cmd_list = mem_dict["settings"]["hide_cmd_list"]["data"]
@@ -468,7 +469,7 @@ def search_query_proc(message: types.Message):
     # User cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard(message))
-        return
+        return None
 
     if message.location is None:
         return bus_stop_selection(message, message.text)
@@ -499,7 +500,7 @@ def search_query_proc(message: types.Message):
 
     sent_msg = bot.send_message(message.chat.id, msg, reply_markup=option_keyboard(msg_data, 1))
 
-    bot.register_next_step_handler(sent_msg, post_search_query, nearby_stops, msg_data)
+    return bot.register_next_step_handler(sent_msg, post_search_query, nearby_stops, msg_data)
 
 
 def post_search_query(message: types.Message, nearby_stops: list, msg_data):
@@ -513,15 +514,15 @@ def post_search_query(message: types.Message, nearby_stops: list, msg_data):
     # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard(message))
-        return
+        return None
 
     # Option - Button
-    elif message.text.startswith("[") is True:
+    elif message.text.startswith("["):
         opt_num = get_option_number(message.text, msg_data)
         return bus_stop_selection(message, nearby_stops[int(opt_num) - 1][0])
 
     # Not an Integer
-    elif message.text.isdigit() is False:
+    elif not message.text.isdigit():
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
         return search_query(message)
 
@@ -622,15 +623,15 @@ def fav_post_proc(message: types.Message, fav_list, msg_data):
     # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard(message))
-        return
+        return None
 
     # Option - Button
-    elif message.text.startswith("[") is True:
+    elif message.text.startswith("["):
         opt_num = get_option_number(message.text, msg_data)
         return parse_data(message, fav_list[int(opt_num) - 1][0], fav_list[int(opt_num) - 1][1])
 
     # Not an Integer
-    elif message.text.isdigit() is False:
+    elif not message.text.isdigit():
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
         return list_favourites(message)
 
@@ -690,15 +691,15 @@ def del_fav_proc(message: types.Message, fav_list, msg_data):
     # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard(message))
-        return
+        return None
 
     # Option - Button
-    elif message.text.startswith("[") is True:
+    elif message.text.startswith("["):
         opt_num = get_option_number(message.text, msg_data)
         pos = int(opt_num) - 1
 
     # Not an integer
-    elif message.text.isdigit() is False:
+    elif not message.text.isdigit():
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
         return delete_favourites_list(message)
 
@@ -721,7 +722,7 @@ def del_fav_proc(message: types.Message, fav_list, msg_data):
     json_mem.update_specific_json(f"{get_user_name(message)}", mem_dict)
     json_mem.update_json_file()
 
-    bot.send_message(
+    return bot.send_message(
         message.chat.id,
         "The selected bus timing has been deleted from favourites.",
         reply_markup=start_menu_keyboard(message)
@@ -765,7 +766,7 @@ def settings_init(message: types.Message):
                     continue
 
             # Insert new KV if non existent
-            if verify_check is False:
+            if not verify_check:
                 mem_dict["settings"][key_verify] = value_verify
 
     # Update config
@@ -796,15 +797,15 @@ def proc_handle_setting(message: types.Message, msg_data):
     # User Cancel
     if message.text == "/cancel" or message.text == "Cancel":
         bot.send_message(message.chat.id, "Action cancelled.", reply_markup=start_menu_keyboard(message))
-        return
+        return None
 
     # Option - Button
-    elif message.text.startswith("[") is True:
+    elif message.text.startswith("["):
         opt_num = get_option_number(message.text, msg_data)
         key_text = msg_data[int(opt_num) - 1]
 
     # Not string
-    elif isinstance(message.text, str) is False:
+    elif not isinstance(message.text, str):
         bot.send_message(message.chat.id, "Unknown option. Please try again.")
         return delete_favourites_list(message)
 
@@ -835,7 +836,7 @@ def proc_handle_setting(message: types.Message, msg_data):
     json_mem.update_specific_json(f"{get_user_name(message)}", mem_dict)
     json_mem.update_json_file()
 
-    bot.send_message(
+    return bot.send_message(
         message.chat.id,
         f"The setting [{mem_dict['settings'][key]['name']}] has been changed.",
         reply_markup=start_menu_keyboard(message)
@@ -849,7 +850,7 @@ def debug_mode_main(message: types.Message):
 
     msg = "Debug Mode\n"
 
-    msg_data = []
+    # msg_data = []
 
     msg += f"\n\nSelect debug action: "
 

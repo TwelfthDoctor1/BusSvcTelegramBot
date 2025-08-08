@@ -47,7 +47,7 @@ def calculate_est_duration(dur_list: list):
     return round(est_duration, 1)
 
 
-def request_bus_stop_timing(bus_stop_code: int or str, api_key: str, svc_num: list,
+def request_bus_stop_timing(bus_stop_code: int | str, api_key: str, svc_num: list,
                             fallback_header: bool = False, debug: bool = False, return_svc_list: bool = False,
                             no_exact_time=False, short_forms=False, use_emojis=False):
     """

@@ -144,6 +144,8 @@ def return_bus_svc_json(svc: str, direction: int):
                 is_loop
             )
 
+    return None
+
 
 def get_bus_svc_list():
     bus_svc_list = []
@@ -240,7 +242,7 @@ if __name__ == "__main__":
     API_KEY_LTA = os.getenv("API_KEY_LTA")
 
     returner = request_bus_svc_info("16M", 1, API_KEY_LTA)
-    if returner[7] is False:
+    if not returner[7]:
         print(
             f"=======================================================================================\n"
             f"[{returner[0]}] | {returner[1]}\n"
@@ -248,7 +250,7 @@ if __name__ == "__main__":
             f"{returner[4]} >>> {returner[5]} [Direction: {returner[2]}]\n"
             f"======================================================================================="
         )
-    elif returner[7] is True:
+    elif returner[7]:
         print(
             f"=======================================================================================\n"
             f"[{returner[0]}] | {returner[1]}\n"

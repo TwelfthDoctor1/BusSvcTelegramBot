@@ -3,6 +3,8 @@ import os
 import urllib.request
 from dotenv import load_dotenv
 from pathlib import Path
+
+from TransportAPI.BusService import sort_bus_svc_list
 from UtilLib.JSONHandler import JSONHandler
 
 bus_route_data: JSONHandler
@@ -38,17 +40,17 @@ def request_bus_route_info(api_key: str):
             json_dict = response.read().decode("utf-8")
             dict_data = json.loads(json_dict)
             route_dict = dict()
-            temp_route_dict = dict()
+            # temp_route_dict = dict()
 
             for data in dict_data["value"]:
-                print(f"PROC: {data['ServiceNo']}")
+                # print(f"PROC: {data['ServiceNo']}")
                 if data["ServiceNo"] not in route_dict:
                     route_dict[data["ServiceNo"]] = {
                         data["Direction"]: {
                             data["StopSequence"]: (data["BusStopCode"], data["Distance"]),
                         }
                     }
-                    print(f"PROC: DIRECTION: {data['Direction']} | STOP: {data['StopSequence']} | BUS: {data['BusStopCode']} | DISTANCE: {data['Distance']}")
+                    # print(f"PROC: DIRECTION: {data['Direction']} | STOP: {data['StopSequence']} | BUS: {data['BusStopCode']} | DISTANCE: {data['Distance']}")
                 else:
                     temp_route_dict = route_dict[data["ServiceNo"]]
 
@@ -60,16 +62,16 @@ def request_bus_route_info(api_key: str):
 
                     route_dict[data["ServiceNo"]] = temp_route_dict
 
-                    print(f"PROC: DIRECTION: {data['Direction']} | STOP: {data['StopSequence']} | BUS: {data['BusStopCode']} | DISTANCE: {data['Distance']}")
+                    # print(f"PROC: DIRECTION: {data['Direction']} | STOP: {data['StopSequence']} | BUS: {data['BusStopCode']} | DISTANCE: {data['Distance']}")
 
             if len(dict_data["value"]) < 500:
                 break
             else:
                 skip_val += 500
 
-            print(f"PROC: SKIP: {skip_val}")
+            # print(f"PROC: SKIP: {skip_val}")
 
-    print(route_dict)
+    # print(route_dict)
 
     return route_dict
 
@@ -140,6 +142,17 @@ def get_bus_svc_route(svc: str, direction: str):
     return bus_route_data.return_specific_json(svc)[direction]
 
 
+def get_bus_svc_from_bus_stop_code(bus_stop_code: str):
+    svc_list = []
+    for svc, data in bus_route_data.return_json().items():
+        for direction, dir_data in data.items():
+            for stop, stop_data in dir_data.items():
+                if bus_stop_code in stop_data and svc not in svc_list:
+                    svc_list.append(svc)
+                    break
+
+    return sort_bus_svc_list(svc_list)
+
 if __name__ == "__main__":
     ENV_PATH = os.path.join(Path(__file__).resolve().parent.parent, "RefKey.env")
 
@@ -148,10 +161,13 @@ if __name__ == "__main__":
 
     # Get Values from ENV
     API_KEY_LTA = os.getenv("API_KEY_LTA")
+    store_bus_route_data(API_KEY_LTA)
 
     returner = request_bus_route_info(API_KEY_LTA)
 
     print(returner)
+
+    print(get_bus_svc_from_bus_stop_code("77009"))
     # if returner[7] is False:
     #     print(
     #         f"=======================================================================================\n"
